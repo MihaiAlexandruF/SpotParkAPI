@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using SpotParkAPI.Models;
+using SpotParkAPI.Repositories;
+using SpotParkAPI.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,6 +14,8 @@ builder.Services.AddDbContext<SpotParkDbContext>(options =>
 
 // Adaug? serviciile necesare pentru aplica?ie
 builder.Services.AddControllers();
+builder.Services.AddScoped<IParkingRepository, ParkingRepository>();
+builder.Services.AddScoped<ParkingService>();
 
 
 

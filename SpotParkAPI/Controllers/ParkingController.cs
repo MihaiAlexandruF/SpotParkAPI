@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SpotParkAPI.Models;
+using SpotParkAPI.Services;
 
 namespace SpotParkAPI.Controllers
 {
@@ -9,20 +10,19 @@ namespace SpotParkAPI.Controllers
     [ApiController]
     public class ParkingController : ControllerBase
     {
-        private readonly SpotParkDbContext _context;
 
-        public ParkingController(SpotParkDbContext context)
+        private readonly ParkingService _parkingService;
+
+        public ParkingController(ParkingService parkingService)
         {
-            _context = context;
+            _parkingService = parkingService;
         }
-
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<ParkingLot>>> GetParkingLots()
+        public async Task<ActionResult<List<ParkingLot>>> GetParkingLots()
         {
-            return  await _context.ParkingLots.ToListAsync();
+            var spots = await _parkingService.GetParkingLotsAsync();
+            return Ok(spots);
         }
-
-
 
 
 
