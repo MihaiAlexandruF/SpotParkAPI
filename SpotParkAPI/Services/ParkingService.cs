@@ -14,5 +14,15 @@ namespace SpotParkAPI.Services
         {
             return await _parkingRepository.GetParkingLotsAsync();
         }
+
+        public async Task<ParkingLot> GetParkingLotByIdAsync(int id)
+        {
+            return await _parkingRepository.GetParkingLotByIdAsync(id);
+        }
+
+        public async Task AddParkingLotAsync(ParkingLot parkingLot)
+        {
+            await _parkingRepository.AddParkingLotAsync(parkingLot);
+        }
     }
 }

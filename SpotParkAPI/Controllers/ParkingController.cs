@@ -24,6 +24,24 @@ namespace SpotParkAPI.Controllers
             return Ok(spots);
         }
 
+        [HttpGet("{id}")]
+        public async Task<ActionResult<ParkingLot>> GetParkingLotById(int id)
+        {
+            var spot = await _parkingService.GetParkingLotByIdAsync(id);
+            if (spot == null)
+            {
+                return NotFound();
+            }
+            return Ok(spot);
+        }
+
+        [HttpPost]
+        public async Task<ActionResult<ParkingLot>> AddParkingLot(ParkingLot parkingLot)
+        {
+                await _parkingService.AddParkingLotAsync(parkingLot);
+                return CreatedAtAction(nameof(GetParkingLotById), new { id = parkingLot.ParkingLotId }, parkingLot);
+
+        }
 
 
     }

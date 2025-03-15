@@ -25,7 +25,7 @@ public partial class ParkingLot
 
     public virtual ICollection<AvailabilitySchedule> AvailabilitySchedules { get; set; } = new List<AvailabilitySchedule>();
 
-    public virtual User Owner { get; set; } = null!;
+    public virtual User? Owner { get; set; } 
 
     public virtual ICollection<Reservation> Reservations { get; set; } = new List<Reservation>();
 }

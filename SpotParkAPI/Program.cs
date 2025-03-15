@@ -1,39 +1,60 @@
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using SpotParkAPI.Models;
 using SpotParkAPI.Repositories;
 using SpotParkAPI.Services;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+// Adaugă serviciile în container
+builder.Services.AddControllers();
 
-// �nregistreaz? DbContext-ul �n DI container
+// Înregistrează DbContext-ul în DI container
 builder.Services.AddDbContext<SpotParkDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Adaug? serviciile necesare pentru aplica?ie
-builder.Services.AddControllers();
+// Înregistrează repository-uri și servicii
 builder.Services.AddScoped<IParkingRepository, ParkingRepository>();
 builder.Services.AddScoped<ParkingService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
 
+// Configurează autentificarea JWT
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = builder.Configuration["Jwt:Issuer"],
+            ValidAudience = builder.Configuration["Jwt:Audience"],
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
+        };
+    });
 
+builder.Services.AddAuthorization();
 
-builder.Services.AddControllers();
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
+// Adaugă Swagger pentru documentarea API-ului
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// Configurează pipeline-ul HTTP
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
 
 app.UseHttpsRedirection();
 
-app.UseAuthorization();
+app.UseAuthentication(); // Adaugă middleware-ul de autentificare
+app.UseAuthorization();  // Adaugă middleware-ul de autorizare
 
 app.MapControllers();
 
