@@ -1,5 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using SpotParkAPI.Models;
+using SpotParkAPI.Models.Entities;
 
 public class AppDbContext : DbContext
 {

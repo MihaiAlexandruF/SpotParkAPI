@@ -1,8 +1,9 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using SpotParkAPI.Models;
+﻿using Microsoft.AspNetCore.Mvc;
+using SpotParkAPI.Models.Entities;
 using SpotParkAPI.Services;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace SpotParkAPI.Controllers
 {
@@ -10,13 +11,13 @@ namespace SpotParkAPI.Controllers
     [ApiController]
     public class ParkingController : ControllerBase
     {
-
         private readonly ParkingService _parkingService;
 
         public ParkingController(ParkingService parkingService)
         {
             _parkingService = parkingService;
         }
+
         [HttpGet]
         public async Task<ActionResult<List<ParkingLot>>> GetParkingLots()
         {
@@ -38,18 +39,10 @@ namespace SpotParkAPI.Controllers
         [HttpPost]
         public async Task<ActionResult<ParkingLot>> AddParkingLot(ParkingLot parkingLot)
         {
-                await _parkingService.AddParkingLotAsync(parkingLot);
-                return CreatedAtAction(nameof(GetParkingLotById), new { id = parkingLot.ParkingLotId }, parkingLot);
-
+            await _parkingService.AddParkingLotAsync(parkingLot);
+            return CreatedAtAction(nameof(GetParkingLotById), new { id = parkingLot.ParkingLotId }, parkingLot);
         }
 
-
+       
     }
-    
-        
-        
-
-
-
-    
 }

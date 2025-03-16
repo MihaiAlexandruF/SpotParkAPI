@@ -38,13 +38,13 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddAuthorization();
 
-// Adaugă Swagger pentru documentarea API-ului
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-// Configurează pipeline-ul HTTP
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -53,8 +53,8 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.UseAuthentication(); // Adaugă middleware-ul de autentificare
-app.UseAuthorization();  // Adaugă middleware-ul de autorizare
+app.UseAuthentication(); 
+app.UseAuthorization();  
 
 app.MapControllers();
 

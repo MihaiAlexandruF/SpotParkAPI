@@ -1,4 +1,4 @@
-﻿using SpotParkAPI.Models;
+﻿using SpotParkAPI.Models.Requests;
 
 namespace SpotParkAPI.Services
 {

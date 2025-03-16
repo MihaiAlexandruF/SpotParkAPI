@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace SpotParkAPI.Models;
+namespace SpotParkAPI.Models.Entities;
 
 public partial class Reservation
 {

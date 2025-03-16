@@ -5,6 +5,8 @@ using System.Security.Claims;
 using System.Text;
 using SpotParkAPI.Models;
 using Microsoft.AspNetCore.Mvc;
+using SpotParkAPI.Models.Entities;
+using SpotParkAPI.Models.Requests;
 
 
 namespace SpotParkAPI.Services

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
+using SpotParkAPI.Models.Entities;
 
 namespace SpotParkAPI.Models;
 

@@ -1,4 +1,6 @@
-﻿using SpotParkAPI.Models;
+﻿using SpotParkAPI.Models.Entities;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace SpotParkAPI.Repositories
 {
@@ -6,7 +8,11 @@ namespace SpotParkAPI.Repositories
     {
         Task<List<ParkingLot>> GetParkingLotsAsync();
         Task<ParkingLot> GetParkingLotByIdAsync(int id);
-
         Task AddParkingLotAsync(ParkingLot parkingLot);
+
+        
+       
+        Task<List<AvailabilitySchedule>> GetAvailabilitySchedulesByParkingLotIdAsync(int parkingLotId);
+       
     }
 }

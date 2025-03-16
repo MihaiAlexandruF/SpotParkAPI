@@ -1,15 +1,22 @@
-﻿using SpotParkAPI.Models;
-using SpotParkAPI.Repositories;
+﻿using SpotParkAPI.Repositories;
+using System;
+using Microsoft.EntityFrameworkCore;
+using System.Threading.Tasks;
+using SpotParkAPI.Models.Entities;
 
 namespace SpotParkAPI.Services
 {
     public class ParkingService
     {
         private readonly IParkingRepository _parkingRepository;
+        
+
         public ParkingService(IParkingRepository parkingRepository)
         {
             _parkingRepository = parkingRepository;
+            
         }
+
         public async Task<List<ParkingLot>> GetParkingLotsAsync()
         {
             return await _parkingRepository.GetParkingLotsAsync();
@@ -24,5 +31,7 @@ namespace SpotParkAPI.Services
         {
             await _parkingRepository.AddParkingLotAsync(parkingLot);
         }
+
+        
     }
 }

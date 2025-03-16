@@ -1,4 +1,4 @@
-﻿namespace SpotParkAPI.Models
+﻿namespace SpotParkAPI.Models.Requests
 {
     public class RegisterRequest
     {
