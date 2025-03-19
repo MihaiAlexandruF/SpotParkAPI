@@ -19,6 +19,7 @@ builder.Services.AddDbContext<SpotParkDbContext>(options =>
 builder.Services.AddScoped<IParkingRepository, ParkingRepository>();
 builder.Services.AddScoped<ParkingService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddAutoMapper(typeof(MappingProfile));
 
 // Configurează autentificarea JWT
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
