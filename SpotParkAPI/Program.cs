@@ -20,6 +20,12 @@ builder.Services.AddScoped<IParkingRepository, ParkingRepository>();
 builder.Services.AddScoped<ParkingService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddAutoMapper(typeof(MappingProfile));
+builder.Services.AddScoped<IAvailabilityService, AvailabilityService>();
+builder.Services.AddScoped<IAvailabilityRepository, AvailabilityRepository>();
+builder.Services.AddScoped<IReservationRepository, ReservationRepository>();
+builder.Services.AddScoped<IReservationService, ReservationService>();
+builder.Services.AddScoped<ICommonService, CommonService>();
+builder.Services.AddHttpContextAccessor(); // Pentru IHttpContextAccessor
 
 // Configurează autentificarea JWT
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)

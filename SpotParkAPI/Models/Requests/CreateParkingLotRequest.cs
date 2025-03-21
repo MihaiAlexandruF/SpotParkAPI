@@ -18,10 +18,5 @@ namespace SpotParkAPI.Models.Requests
         public List<WeeklySchedule>? WeeklySchedules { get; set; }
     }
 
-    public class WeeklySchedule
-    {
-        public string DayOfWeek { get; set; } // Monday, Tuesday, etc.
-        public TimeSpan OpenTime { get; set; }  // Format "HH:mm"
-        public TimeSpan CloseTime { get; set; } // Format "HH:mm"
-    }
+    
 }

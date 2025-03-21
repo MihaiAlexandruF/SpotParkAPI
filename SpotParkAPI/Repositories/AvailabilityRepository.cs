@@ -1,21 +1,25 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using SpotParkAPI.Models;
 using SpotParkAPI.Models.Entities;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace SpotParkAPI.Repositories
 {
-    public class AvailabilityScheduleRepository
+    public class AvailabilityRepository : IAvailabilityRepository
     {
         private readonly SpotParkDbContext _context;
 
-        public AvailabilityScheduleRepository(SpotParkDbContext context)
+        public AvailabilityRepository(SpotParkDbContext context)
         {
             _context = context;
         }
 
         public async Task<List<AvailabilitySchedule>> GetByParkingLotIdAsync(int parkingLotId)
         {
-            return await _context.AvailabilitySchedules.Where(a => a.ParkingLotId == parkingLotId).ToListAsync();
+            return await _context.AvailabilitySchedules
+                .Where(a => a.ParkingLotId == parkingLotId)
+                .ToListAsync();
         }
 
         public async Task AddAsync(AvailabilitySchedule schedule)
