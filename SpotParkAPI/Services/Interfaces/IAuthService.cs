@@ -1,6 +1,6 @@
 ﻿using SpotParkAPI.Models.Requests;
 
-namespace SpotParkAPI.Services
+namespace SpotParkAPI.Services.Interfaces
 {
     public interface IAuthService
     {  

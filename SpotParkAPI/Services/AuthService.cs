@@ -7,6 +7,7 @@ using SpotParkAPI.Models;
 using Microsoft.AspNetCore.Mvc;
 using SpotParkAPI.Models.Entities;
 using SpotParkAPI.Models.Requests;
+using SpotParkAPI.Services.Interfaces;
 
 
 namespace SpotParkAPI.Services

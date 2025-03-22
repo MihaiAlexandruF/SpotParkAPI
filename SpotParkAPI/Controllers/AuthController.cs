@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using SpotParkAPI.Models.Requests;
-using SpotParkAPI.Services;
+using SpotParkAPI.Services.Interfaces;
 
 [Route("api/auth")]
 [ApiController]

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace SpotParkAPI.Repositories
+namespace SpotParkAPI.Repositories.Interfaces
 {
     public interface IReservationRepository
     {

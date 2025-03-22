@@ -2,7 +2,8 @@
 using SpotParkAPI.Models.Dtos;
 using SpotParkAPI.Models.Entities;
 using SpotParkAPI.Models.Requests;
-using SpotParkAPI.Repositories;
+using SpotParkAPI.Repositories.Interfaces;
+using SpotParkAPI.Services.Interfaces;
 using System;
 using System.Threading.Tasks;
 
@@ -40,11 +41,27 @@ namespace SpotParkAPI.Services
             }
 
             // Calculează numărul de ore
-            var duration = request.EndTime - request.StartTime;
-            var totalHours = (decimal)duration.TotalHours;
+            // Calculează durata exactă în ore, inclusiv fracții de oră
+            var duration = (request.EndTime - request.StartTime).TotalMinutes / 60;
 
-            // Calculează prețul total
-            var totalPrice = parkingLot.PricePerHour * totalHours;
+            // Asigură-te că durata este cel puțin 1 minut
+            if (duration <= 0)
+            {
+                throw new InvalidOperationException("End time must be after start time.");
+            }
+
+            // Asigură-te că prețul nu este null sau zero
+            if (parkingLot.PricePerHour <= 0)
+            {
+                throw new InvalidOperationException("Invalid price per hour for the parking lot.");
+            }
+
+            // Calculează costul total
+            var totalPrice = (decimal)duration * parkingLot.PricePerHour;
+
+            // Aplică prețul în rezervare
+           
+
 
             // Transformă ReserveRequest în Reservation folosind AutoMapper
             var reservation = _mapper.Map<Reservation>(request);

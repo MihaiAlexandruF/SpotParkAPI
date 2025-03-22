@@ -1,11 +1,11 @@
-﻿using SpotParkAPI.Repositories;
-using System;
+﻿using System;
 using Microsoft.EntityFrameworkCore;
 using System.Threading.Tasks;
 using SpotParkAPI.Models.Entities;
 using SpotParkAPI.Models.Requests;
 using AutoMapper;
 using SpotParkAPI.Models.Dtos;
+using SpotParkAPI.Repositories.Interfaces;
 
 namespace SpotParkAPI.Services
 {

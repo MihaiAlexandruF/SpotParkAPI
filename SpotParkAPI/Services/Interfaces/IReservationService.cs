@@ -3,7 +3,7 @@ using SpotParkAPI.Models.Requests;
 using System;
 using System.Threading.Tasks;
 
-namespace SpotParkAPI.Services
+namespace SpotParkAPI.Services.Interfaces
 {
     public interface IReservationService
     {

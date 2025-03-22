@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using SpotParkAPI.Models;
 using SpotParkAPI.Models.Entities;
+using SpotParkAPI.Repositories.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;

@@ -1,6 +1,6 @@
 ﻿using SpotParkAPI.Models.Entities;
 
-namespace SpotParkAPI.Services
+namespace SpotParkAPI.Services.Interfaces
 {
     public interface ICommonService
     {

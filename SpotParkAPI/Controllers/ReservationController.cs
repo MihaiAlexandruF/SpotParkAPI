@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using SpotParkAPI.Models.Requests;
-using SpotParkAPI.Services;
+using SpotParkAPI.Services.Interfaces;
 using System;
 using System.Threading.Tasks;
 
@@ -39,6 +39,7 @@ namespace SpotParkAPI.Controllers
             }
             catch (Exception ex)
             {
+                Console.WriteLine(ex);
                 return StatusCode(500, "Internal server error");
             }
         }

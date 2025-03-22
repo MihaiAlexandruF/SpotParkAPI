@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using SpotParkAPI.Models.Entities;
-using SpotParkAPI.Repositories;
+using SpotParkAPI.Repositories.Interfaces;
+using SpotParkAPI.Services.Interfaces;
 using System;
 using System.Security.Claims;
 using System.Threading.Tasks;

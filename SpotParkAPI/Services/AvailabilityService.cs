@@ -1,7 +1,7 @@
 ﻿using SpotParkAPI.Models.Entities;
 using SpotParkAPI.Models.Requests;
-using SpotParkAPI.Repositories;
-using SpotParkAPI.Services;
+using SpotParkAPI.Repositories.Interfaces;
+using SpotParkAPI.Services.Interfaces;
 
 
 public class AvailabilityService : IAvailabilityService

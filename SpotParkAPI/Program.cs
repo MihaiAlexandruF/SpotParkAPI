@@ -3,7 +3,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using SpotParkAPI.Models;
 using SpotParkAPI.Repositories;
+using SpotParkAPI.Repositories.Interfaces;
 using SpotParkAPI.Services;
+using SpotParkAPI.Services.Interfaces;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
