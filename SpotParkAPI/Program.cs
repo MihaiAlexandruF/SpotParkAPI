@@ -1,12 +1,14 @@
 ﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using SpotParkAPI.Middleware;
 using SpotParkAPI.Models;
 using SpotParkAPI.Repositories;
 using SpotParkAPI.Repositories.Interfaces;
 using SpotParkAPI.Services;
 using SpotParkAPI.Services.Interfaces;
 using System.Text;
+using SpotParkAPI.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,7 +17,13 @@ builder.Services.AddControllers();
 
 // Înregistrează DbContext-ul în DI container
 builder.Services.AddDbContext<SpotParkDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlServer(
+        builder.Configuration.GetConnectionString("DefaultConnection"),
+        sqlServerOptions => sqlServerOptions.EnableRetryOnFailure(
+            maxRetryCount: 5,
+            maxRetryDelay: TimeSpan.FromSeconds(30),
+            errorNumbersToAdd: null)
+    ));
 
 // Înregistrează repository-uri și servicii
 builder.Services.AddScoped<IParkingRepository, ParkingRepository>();
@@ -59,7 +67,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-
+app.UseMiddleware<ExceptionMiddleware>();
 app.UseHttpsRedirection();
 
 app.UseAuthentication(); 
@@ -68,3 +76,19 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<SpotParkDbContext>();
+    try
+    {
+        dbContext.Database.OpenConnection();
+        Console.WriteLine("Conexiunea la baza de date a reușit!");
+        dbContext.Database.CloseConnection();
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Eroare la conectare: {ex.Message}");
+    }
+}

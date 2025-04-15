@@ -6,10 +6,11 @@ using SpotParkAPI.Models.Requests;
 using AutoMapper;
 using SpotParkAPI.Models.Dtos;
 using SpotParkAPI.Repositories.Interfaces;
+using SpotParkAPI.Services.Interfaces;
 
 namespace SpotParkAPI.Services
 {
-    public class ParkingService
+    public class ParkingService : IParkingService
     {
         private readonly IParkingRepository _parkingRepository;
         private readonly IMapper _mapper;
