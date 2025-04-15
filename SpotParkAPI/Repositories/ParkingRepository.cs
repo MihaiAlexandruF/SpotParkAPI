@@ -1,5 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using SpotParkAPI.Models;
+using SpotParkAPI.Models.Entities;
+using SpotParkAPI.Repositories.Interfaces;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace SpotParkAPI.Repositories
 {
@@ -12,11 +16,35 @@ namespace SpotParkAPI.Repositories
             _context = context;
         }
 
-
         public async Task<List<ParkingLot>> GetParkingLotsAsync()
         {
             return await _context.ParkingLots.ToListAsync();
-            //de facyt pt ID
         }
+
+        public async Task<ParkingLot> GetParkingLotByIdAsync(int id)
+        {
+            return await _context.ParkingLots.FindAsync(id);
+        }
+
+        public async Task AddParkingLotAsync(ParkingLot parkingLot)
+        {
+            _context.ParkingLots.Add(parkingLot);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task AddAvailabilityScheduleAsync(AvailabilitySchedule schedule)
+        {
+            _context.AvailabilitySchedules.Add(schedule);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task<List<AvailabilitySchedule>> GetAvailabilitySchedulesByParkingLotIdAsync(int parkingLotId)
+        {
+            return await _context.AvailabilitySchedules
+                .Where(a => a.ParkingLotId == parkingLotId)
+                .ToListAsync();
+        }
+
+        
     }
 }

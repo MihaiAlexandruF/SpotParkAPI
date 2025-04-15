@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace SpotParkAPI.Models;
+namespace SpotParkAPI.Models.Entities;
 
 public partial class AvailabilitySchedule
 {
@@ -11,7 +11,7 @@ public partial class AvailabilitySchedule
 
     public string? AvailabilityType { get; set; }
 
-    public string DayOfWeek { get; set; } = null!;
+    public string? DayOfWeek { get; set; } = null!;
 
     public TimeOnly OpenTime { get; set; }
 
