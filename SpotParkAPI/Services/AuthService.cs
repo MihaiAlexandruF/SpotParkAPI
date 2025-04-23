@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using SpotParkAPI.Models.Entities;
 using SpotParkAPI.Models.Requests;
 using SpotParkAPI.Services.Interfaces;
+using SpotParkAPI.Models.Dtos;
 
 
 namespace SpotParkAPI.Services
@@ -23,7 +24,7 @@ namespace SpotParkAPI.Services
             _configuration = configuration;
         }
 
-        public async Task<string> LoginAsync(LoginRequest request)
+        public async Task<LoginResponse> LoginAsync(LoginRequest request)
         {
             var user= await _context.Users.FirstOrDefaultAsync(u => u.Username == request.UsernameOrEmail || u.Email == request.UsernameOrEmail);
 
@@ -33,8 +34,19 @@ namespace SpotParkAPI.Services
             }
 
             var token = GenerateJwtToken(user);
-            return token;
 
+            var userDto = new UserDto
+            {
+                Username = user.Username,
+                Email = user.Email,
+            };
+
+            return new LoginResponse
+            {
+                Token = token,
+                User = userDto
+
+            };
             
         }
 

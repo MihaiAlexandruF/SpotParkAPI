@@ -76,6 +76,34 @@ namespace SpotParkAPI.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "ParkingLotImages",
+                columns: table => new
+                {
+                    ImageId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    ParkingLotId = table.Column<int>(type: "int", nullable: false),
+                    UserId = table.Column<int>(type: "int", nullable: false),
+                    ImagePath = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    UploadedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ParkingLotImages", x => x.ImageId);
+                    table.ForeignKey(
+                        name: "FK_ParkingLotImages_Parking_Lots_ParkingLotId",
+                        column: x => x.ParkingLotId,
+                        principalTable: "Parking_Lots",
+                        principalColumn: "parking_lot_id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_ParkingLotImages_Users_UserId",
+                        column: x => x.UserId,
+                        principalTable: "Users",
+                        principalColumn: "user_id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Reservations",
                 columns: table => new
                 {
@@ -137,6 +165,16 @@ namespace SpotParkAPI.Migrations
                 column: "owner_id");
 
             migrationBuilder.CreateIndex(
+                name: "IX_ParkingLotImages_ParkingLotId",
+                table: "ParkingLotImages",
+                column: "ParkingLotId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ParkingLotImages_UserId",
+                table: "ParkingLotImages",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
                 name: "idx_payments_reservation_id",
                 table: "Payments",
                 column: "reservation_id");
@@ -181,6 +219,9 @@ namespace SpotParkAPI.Migrations
         {
             migrationBuilder.DropTable(
                 name: "Availability_Schedule");
+
+            migrationBuilder.DropTable(
+                name: "ParkingLotImages");
 
             migrationBuilder.DropTable(
                 name: "Payments");

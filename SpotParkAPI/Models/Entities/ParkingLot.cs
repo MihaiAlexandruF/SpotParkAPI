@@ -28,4 +28,6 @@ public partial class ParkingLot
     public virtual User? Owner { get; set; } 
 
     public virtual ICollection<Reservation> Reservations { get; set; } = new List<Reservation>();
+
+    public virtual ICollection<ParkingLotImage> Images { get; set; } = new List<ParkingLotImage>();
 }

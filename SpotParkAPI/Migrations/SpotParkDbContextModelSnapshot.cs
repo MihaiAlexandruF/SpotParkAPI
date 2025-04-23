@@ -121,6 +121,36 @@ namespace SpotParkAPI.Migrations
                     b.ToTable("Parking_Lots", (string)null);
                 });
 
+            modelBuilder.Entity("SpotParkAPI.Models.Entities.ParkingLotImage", b =>
+                {
+                    b.Property<int>("ImageId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ImageId"));
+
+                    b.Property<string>("ImagePath")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("ParkingLotId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("UploadedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("ImageId");
+
+                    b.HasIndex("ParkingLotId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("ParkingLotImages");
+                });
+
             modelBuilder.Entity("SpotParkAPI.Models.Entities.Payment", b =>
                 {
                     b.Property<int>("PaymentId")
@@ -302,6 +332,25 @@ namespace SpotParkAPI.Migrations
                     b.Navigation("Owner");
                 });
 
+            modelBuilder.Entity("SpotParkAPI.Models.Entities.ParkingLotImage", b =>
+                {
+                    b.HasOne("SpotParkAPI.Models.Entities.ParkingLot", "ParkingLot")
+                        .WithMany("Images")
+                        .HasForeignKey("ParkingLotId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("SpotParkAPI.Models.Entities.User", "User")
+                        .WithMany("ParkingLotImages")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ParkingLot");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("SpotParkAPI.Models.Entities.Payment", b =>
                 {
                     b.HasOne("SpotParkAPI.Models.Entities.Reservation", "Reservation")
@@ -336,6 +385,8 @@ namespace SpotParkAPI.Migrations
                 {
                     b.Navigation("AvailabilitySchedules");
 
+                    b.Navigation("Images");
+
                     b.Navigation("Reservations");
                 });
 
@@ -346,6 +397,8 @@ namespace SpotParkAPI.Migrations
 
             modelBuilder.Entity("SpotParkAPI.Models.Entities.User", b =>
                 {
+                    b.Navigation("ParkingLotImages");
+
                     b.Navigation("ParkingLots");
 
                     b.Navigation("Reservations");

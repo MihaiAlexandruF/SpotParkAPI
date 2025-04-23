@@ -20,4 +20,5 @@ public partial class User
     public virtual ICollection<ParkingLot> ParkingLots { get; set; } = new List<ParkingLot>();
 
     public virtual ICollection<Reservation> Reservations { get; set; } = new List<Reservation>();
+    public virtual ICollection<ParkingLotImage> ParkingLotImages { get; set; } = new List<ParkingLotImage>();
 }
