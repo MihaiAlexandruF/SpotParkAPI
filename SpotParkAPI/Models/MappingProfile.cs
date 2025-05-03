@@ -16,6 +16,7 @@ namespace SpotParkAPI.Models
             .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => DateTime.Now))
             .ForMember(dest => dest.Status, opt => opt.MapFrom(src => "active")); // Setează statusul implicit
             CreateMap<Reservation, ReservationDto>();
+            CreateMap<ParkingLotImage, ParkingLotImageDto>();
         }
     }
 }

@@ -11,5 +11,8 @@ namespace SpotParkAPI.Services.Interfaces
         Task AddParkingLotAsync(ParkingLot parkingLot);
         Task<ParkingLotDto> CreateParkingLotWithAvailabilityAsync(CreateParkingLotRequest request, int ownerId);
         Task<List<AvailabilityScheduleDto>> GetAvailabilitySchedulesAsync(int parkingLotId);
+        Task<List<ParkingLotDto>> GetParkingLotsByOwnerIdAsync(int ownerId);
+        Task<ParkingLotDto> GetParkingLotDetailsByIdAsync(int id);
+
     }
 }

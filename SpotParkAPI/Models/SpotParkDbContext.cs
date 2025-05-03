@@ -25,6 +25,12 @@ public partial class SpotParkDbContext : DbContext
     public virtual DbSet<Reservation> Reservations { get; set; }
 
     public virtual DbSet<User> Users { get; set; }
+    public virtual DbSet<Wallet> Wallets { get; set; }
+    public virtual DbSet<WalletTransaction> WalletTransactions { get; set; }
+    public virtual DbSet<UserVehicle> UserVehicles { get; set; }
+
+
+    public DbSet<ParkingLotImage> ParkingLotImages { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
@@ -207,6 +213,66 @@ public partial class SpotParkDbContext : DbContext
                 .IsUnicode(false)
                 .HasColumnName("username");
         });
+
+        modelBuilder.Entity<Wallet>(entity =>
+        {
+            entity.HasKey(e => e.WalletId);
+            entity.ToTable("Wallets");
+
+            entity.HasOne(e => e.User)
+                  .WithOne()
+                  .HasForeignKey<Wallet>(w => w.UserId)
+                  .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<WalletTransaction>(entity =>
+        {
+            entity.HasKey(e => e.WalletTransactionId);
+            entity.ToTable("Wallet_Transactions");
+
+            entity.HasOne(e => e.Wallet)
+                  .WithMany(w => w.Transactions)
+                  .HasForeignKey(e => e.WalletId)
+                  .OnDelete(DeleteBehavior.Cascade);
+        });
+
+
+
+        modelBuilder.Entity<ParkingLotImage>(entity =>
+        {
+            entity.HasKey(e => e.ImageId);
+
+            entity.HasOne(d => d.ParkingLot)
+                .WithMany(p => p.Images)
+                .HasForeignKey(d => d.ParkingLotId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(d => d.User)
+                .WithMany(p => p.ParkingLotImages)
+                .HasForeignKey(d => d.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<UserVehicle>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.ToTable("UserVehicles");
+
+            entity.Property(e => e.PlateNumber)
+                  .IsRequired()
+                  .HasMaxLength(15)
+                  .IsUnicode(false);
+
+            entity.Property(e => e.CreatedAt)
+                  .HasColumnType("datetime")
+                  .HasDefaultValueSql("(getdate())");
+
+            entity.HasOne(e => e.User)
+                  .WithMany(u => u.UserVehicles)
+                  .HasForeignKey(e => e.UserId)
+                  .OnDelete(DeleteBehavior.Cascade);
+        });
+
 
         OnModelCreatingPartial(modelBuilder);
     }

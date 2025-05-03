@@ -12,6 +12,9 @@
         public DateTime? CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
         public List<AvailabilityScheduleDto> AvailabilitySchedules { get; set; } = new List<AvailabilityScheduleDto>();
+
+        public List<ParkingLotImageDto> Images { get; set; } = new List<ParkingLotImageDto>();
+
     }
     public class AvailabilityScheduleDto
     {

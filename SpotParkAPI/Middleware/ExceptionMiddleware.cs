@@ -30,7 +30,6 @@ namespace SpotParkAPI.Middleware
         {
             context.Response.ContentType = "application/json";
 
-            
             var statusCode = exception switch
             {
                 UnauthorizedAccessException => StatusCodes.Status401Unauthorized,
@@ -42,10 +41,12 @@ namespace SpotParkAPI.Middleware
 
             context.Response.StatusCode = statusCode;
 
-            return context.Response.WriteAsync(new ErrorDetails
+            return context.Response.WriteAsync(new
             {
+                Success = false,
                 StatusCode = statusCode,
-                Message = exception.Message
+                Message = exception.Message,
+                ErrorType = exception.GetType().Name
             }.ToString());
         }
     }

@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SpotParkAPI.Models;
 
@@ -11,9 +12,11 @@ using SpotParkAPI.Models;
 namespace SpotParkAPI.Migrations
 {
     [DbContext(typeof(SpotParkDbContext))]
-    partial class SpotParkDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250430134847_AddWalletAndTransactions")]
+    partial class AddWalletAndTransactions
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -220,9 +223,6 @@ namespace SpotParkAPI.Migrations
                         .HasColumnType("datetime")
                         .HasColumnName("end_time");
 
-                    b.Property<string>("LicensePlate")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<int>("ParkingLotId")
                         .HasColumnType("int")
                         .HasColumnName("parking_lot_id");
@@ -311,35 +311,6 @@ namespace SpotParkAPI.Migrations
                         .IsUnique();
 
                     b.ToTable("Users");
-                });
-
-            modelBuilder.Entity("SpotParkAPI.Models.Entities.UserVehicle", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime")
-                        .HasDefaultValueSql("(getdate())");
-
-                    b.Property<string>("PlateNumber")
-                        .IsRequired()
-                        .HasMaxLength(15)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(15)");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("UserVehicles", (string)null);
                 });
 
             modelBuilder.Entity("SpotParkAPI.Models.Entities.Wallet", b =>
@@ -481,17 +452,6 @@ namespace SpotParkAPI.Migrations
                     b.Navigation("ParkingLot");
                 });
 
-            modelBuilder.Entity("SpotParkAPI.Models.Entities.UserVehicle", b =>
-                {
-                    b.HasOne("SpotParkAPI.Models.Entities.User", "User")
-                        .WithMany("UserVehicles")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("SpotParkAPI.Models.Entities.Wallet", b =>
                 {
                     b.HasOne("SpotParkAPI.Models.Entities.User", "User")
@@ -541,8 +501,6 @@ namespace SpotParkAPI.Migrations
                     b.Navigation("ParkingLots");
 
                     b.Navigation("Reservations");
-
-                    b.Navigation("UserVehicles");
                 });
 
             modelBuilder.Entity("SpotParkAPI.Models.Entities.Wallet", b =>

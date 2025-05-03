@@ -33,13 +33,19 @@ public class AvailabilityService : IAvailabilityService
         switch (request.AvailabilityType.ToLower())
         {
             case "always":
-                // Nu este nevoie de programe pentru disponibilitatea permanentă
+                // Ștergem toate programele existente
+                foreach (var schedule in existingSchedules)
+                {
+                    await _availabilityRepository.DeleteAsync(schedule.ScheduleId);
+                }
                 break;
+
             case "daily":
                 if (!request.DailyOpenTime.HasValue || !request.DailyCloseTime.HasValue)
-                {
                     throw new ArgumentException("Daily open and close times are required for daily availability");
-                }
+
+                var open = TimeOnly.Parse(request.DailyOpenTime.Value.ToString(@"hh\:mm"));
+                var close = TimeOnly.Parse(request.DailyCloseTime.Value.ToString(@"hh\:mm"));
 
                 foreach (var day in new[] { "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday" })
                 {
@@ -48,12 +54,13 @@ public class AvailabilityService : IAvailabilityService
                         ParkingLotId = parkingLotId,
                         AvailabilityType = "daily",
                         DayOfWeek = day,
-                        OpenTime = TimeOnly.FromTimeSpan(request.DailyOpenTime.Value),
-                        CloseTime = TimeOnly.FromTimeSpan(request.DailyCloseTime.Value)
+                        OpenTime = open,
+                        CloseTime = close,
                     };
                     await _availabilityRepository.AddAsync(schedule);
                 }
                 break;
+
             case "weekly":
                 if (request.WeeklySchedules == null || request.WeeklySchedules.Count == 0)
                 {
@@ -82,7 +89,38 @@ public class AvailabilityService : IAvailabilityService
     {
         if (string.IsNullOrWhiteSpace(request.AvailabilityType))
         {
-            throw new ArgumentException("Availability type is required");
+            throw new ArgumentException("Availability type is required.");
+        }
+
+        var type = request.AvailabilityType.ToLower();
+
+        if (type == "daily")
+        {
+            if (!request.DailyOpenTime.HasValue || !request.DailyCloseTime.HasValue)
+            {
+                throw new ArgumentException("Daily open and close times are required.");
+            }
+
+            if (request.DailyOpenTime.Value >= request.DailyCloseTime.Value)
+            {
+                throw new ArgumentException("Daily open time must be before close time.");
+            }
+        }
+        else if (type == "weekly")
+        {
+            if (request.WeeklySchedules == null || request.WeeklySchedules.Count == 0)
+            {
+                throw new ArgumentException("Weekly schedules are required.");
+            }
+
+            foreach (var schedule in request.WeeklySchedules)
+            {
+                if (schedule.OpenTime >= schedule.CloseTime)
+                {
+                    throw new ArgumentException($"On {schedule.DayOfWeek}, open time must be before close time.");
+                }
+            }
         }
     }
+
 }

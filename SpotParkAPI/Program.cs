@@ -35,7 +35,15 @@ builder.Services.AddScoped<IAvailabilityRepository, AvailabilityRepository>();
 builder.Services.AddScoped<IReservationRepository, ReservationRepository>();
 builder.Services.AddScoped<IReservationService, ReservationService>();
 builder.Services.AddScoped<ICommonService, CommonService>();
+builder.Services.AddScoped<IParkingImageRepository, ParkingImageRepository>();
+builder.Services.AddScoped<ParkingImageService>();
+builder.Services.AddScoped<IWalletRepository, WalletRepository>();
+
 builder.Services.AddHttpContextAccessor(); // Pentru IHttpContextAccessor
+
+
+
+
 
 // Configurează autentificarea JWT
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -53,6 +61,14 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowMobile", builder =>
+        builder.AllowAnyOrigin()
+               .AllowAnyMethod()
+               .AllowAnyHeader());
+});
+
 builder.Services.AddAuthorization();
 
 
@@ -67,8 +83,12 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.UseCors("AllowMobile");
+app.UseStaticFiles();
 app.UseMiddleware<ExceptionMiddleware>();
-app.UseHttpsRedirection();
+
+//app.UseHttpsRedirection();
 
 app.UseAuthentication(); 
 app.UseAuthorization();  

@@ -43,5 +43,18 @@ namespace SpotParkAPI.Repositories
 
             return !overlappingReservations; // Disponibil dacă nu există rezervări suprapuse
         }
+
+        public async Task<List<Reservation>> GetActiveReservationsForOwnerAsync(int ownerId, DateTime now)
+        {
+            return await _context.Reservations
+                .Include(r => r.ParkingLot)
+                .Include(r => r.Driver)
+                .Where(r => r.ParkingLot.OwnerId == ownerId &&
+                            r.Status == "active" &&
+                            r.StartTime <= now &&
+                            r.EndTime >= now)
+                .ToListAsync();
+        }
+
     }
 }

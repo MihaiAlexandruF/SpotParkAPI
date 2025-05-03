@@ -37,7 +37,16 @@ namespace SpotParkAPI.Controllers
             try
             {
                 await _availabilityService.UpdateAvailabilityAsync(parkingLotId, request);
+                if (!ModelState.IsValid)
+                {
+                    var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
+                    return BadRequest(errors);
+                }
+
                 return Ok("Availability updated successfully");
+                
+
+
             }
             catch (ArgumentException ex)
             {
@@ -47,6 +56,8 @@ namespace SpotParkAPI.Controllers
             {
                 return StatusCode(500, "An error occurred while updating the availability");
             }
+
+
         }
     }
 }

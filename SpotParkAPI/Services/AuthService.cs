@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using SpotParkAPI.Models.Entities;
 using SpotParkAPI.Models.Requests;
 using SpotParkAPI.Services.Interfaces;
+using SpotParkAPI.Models.Dtos;
 
 
 namespace SpotParkAPI.Services
@@ -23,7 +24,7 @@ namespace SpotParkAPI.Services
             _configuration = configuration;
         }
 
-        public async Task<string> LoginAsync(LoginRequest request)
+        public async Task<LoginResponse> LoginAsync(LoginRequest request)
         {
             var user= await _context.Users.FirstOrDefaultAsync(u => u.Username == request.UsernameOrEmail || u.Email == request.UsernameOrEmail);
 
@@ -33,8 +34,19 @@ namespace SpotParkAPI.Services
             }
 
             var token = GenerateJwtToken(user);
-            return token;
 
+            var userDto = new UserDto
+            {
+                Username = user.Username,
+                Email = user.Email,
+            };
+
+            return new LoginResponse
+            {
+                Token = token,
+                User = userDto
+
+            };
             
         }
 
@@ -53,14 +65,25 @@ namespace SpotParkAPI.Services
                 Username = request.Username,
                 Email = request.Email,
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
-                CreatedAt = DateTime.Now
+                CreatedAt = DateTime.UtcNow
             };
-                _context.Users.Add(user);
-            await _context.SaveChangesAsync();
-            return true;
 
+            _context.Users.Add(user);
+            await _context.SaveChangesAsync();
+
+            var wallet = new Wallet
+            {
+                UserId = user.UserId,
+                Balance = 0m
+            };
+
+            _context.Wallets.Add(wallet);
+            await _context.SaveChangesAsync();
+
+            return true;
         }
-            
+
+
 
 
 

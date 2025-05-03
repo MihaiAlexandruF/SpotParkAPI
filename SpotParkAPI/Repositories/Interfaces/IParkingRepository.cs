@@ -13,6 +13,8 @@ namespace SpotParkAPI.Repositories.Interfaces
         
         Task AddAvailabilityScheduleAsync(AvailabilitySchedule schedule);
         Task<List<AvailabilitySchedule>> GetAvailabilitySchedulesByParkingLotIdAsync(int parkingLotId);
+
+        Task<List<ParkingLot>> GetParkingLotsByOwnerIdAsync(int ownerId);
        
     }
 }

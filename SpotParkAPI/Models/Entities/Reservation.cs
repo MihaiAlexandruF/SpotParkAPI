@@ -18,6 +18,8 @@ public partial class Reservation
     public decimal TotalCost { get; set; }
 
     public string? Status { get; set; }
+    public string? LicensePlate { get; set; }
+
 
     public DateTime? CreatedAt { get; set; }
 

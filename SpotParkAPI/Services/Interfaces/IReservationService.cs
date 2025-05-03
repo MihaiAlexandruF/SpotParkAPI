@@ -7,7 +7,11 @@ namespace SpotParkAPI.Services.Interfaces
 {
     public interface IReservationService
     {
-        Task<ReservationDto> ReserveParkingLotAsync(ReserveRequest request);
+        Task<ReservationDto> ReserveParkingLotAsync(CreateReservationRequest request);
+
         Task<bool> IsParkingLotAvailableAsync(int parkingLotId, DateTime startTime, DateTime endTime);
+
+        Task<List<ActiveClientDto>> GetActiveClientsAsync(int ownerId);
+
     }
 }
