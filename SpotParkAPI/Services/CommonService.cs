@@ -1,4 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
+using SpotParkAPI.Models;
 using SpotParkAPI.Models.Entities;
 using SpotParkAPI.Repositories.Interfaces;
 using SpotParkAPI.Services.Interfaces;
@@ -11,16 +13,19 @@ namespace SpotParkAPI.Services
     public class CommonService : ICommonService
     {
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly SpotParkDbContext _context;
         private readonly IParkingRepository _parkingRepository;
         private readonly IReservationRepository _reservationRepository;
         private IAvailabilityService _availabilityService;
 
         public CommonService(
+            SpotParkDbContext context,
             IHttpContextAccessor httpContextAccessor,
             IParkingRepository parkingRepository,
             IReservationRepository reservationRepository,
             IAvailabilityService availabilityService)
         {
+            _context = context;
             _httpContextAccessor = httpContextAccessor;
             _parkingRepository = parkingRepository;
             _reservationRepository = reservationRepository;
@@ -46,18 +51,46 @@ namespace SpotParkAPI.Services
             }
             return parkingLot;
         }
+
         public async Task<bool> IsParkingLotAvailableAsync(int parkingLotId, DateTime startTime, DateTime endTime)
         {
-            // Verifică programul de disponibilitate
             var schedules = await _availabilityService.GetAvailabilitySchedulesAsync(parkingLotId);
-            if (!IsWithinSchedule(schedules, startTime, endTime))
+
+            // Dacă parcarea este de tip always => întotdeauna disponibilă
+            if (schedules == null || schedules.Count == 0)
             {
-                return false;
+                return true;
             }
 
-            // Verifică suprapunerea cu rezervările existente
-            return await _reservationRepository.IsParkingLotAvailableAsync(parkingLotId, startTime, endTime);
+            // Dacă există program setat, verificăm fiecare zi
+            foreach (var day in EachDay(startTime.Date, endTime.Date))
+            {
+                var dayOfWeek = day.DayOfWeek.ToString(); // ex: Monday, Tuesday
+                var scheduleForDay = schedules.FirstOrDefault(s =>
+                    s.DayOfWeek.Equals(dayOfWeek, StringComparison.OrdinalIgnoreCase));
+
+                if (scheduleForDay == null)
+                {
+                    return false;
+                }
+
+                // Comparăm orele
+                var scheduleStart = scheduleForDay.OpenTime;
+                var scheduleEnd = scheduleForDay.CloseTime;
+
+                var slotStart = TimeOnly.FromDateTime(day == startTime.Date ? startTime : day);
+                var slotEnd = TimeOnly.FromDateTime(day == endTime.Date ? endTime : day.AddDays(1));
+
+                if (slotStart < scheduleStart || slotEnd > scheduleEnd)
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
+
+
 
         private bool IsWithinSchedule(List<AvailabilitySchedule> schedules, DateTime start, DateTime end)
         {
@@ -85,10 +118,16 @@ namespace SpotParkAPI.Services
             return true;
         }
 
-        private IEnumerable<DateTime> EachDay(DateTime from, DateTime thru)
+        private IEnumerable<DateTime> EachDay(DateTime from, DateTime to)
         {
-            for (var day = from.Date; day.Date <= thru.Date; day = day.AddDays(1))
+            for (var day = from.Date; day.Date <= to.Date; day = day.AddDays(1))
                 yield return day;
+        }
+
+        public async Task<UserVehicle?> GetUserPlateAsync(int userId, int plateId)
+        {
+            return await _context.UserVehicles
+                .FirstOrDefaultAsync(p => p.UserId == userId && p.Id == plateId);
         }
 
     }

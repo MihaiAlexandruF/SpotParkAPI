@@ -7,6 +7,7 @@ using AutoMapper;
 using SpotParkAPI.Models.Dtos;
 using SpotParkAPI.Repositories.Interfaces;
 using SpotParkAPI.Services.Interfaces;
+using SpotParkAPI.Repositories;
 
 namespace SpotParkAPI.Services
 {
@@ -14,14 +15,18 @@ namespace SpotParkAPI.Services
     {
         private readonly IParkingRepository _parkingRepository;
         private readonly IMapper _mapper;
+        private readonly IParkingImageRepository _parkingImageRepository;
 
 
-        public ParkingService(IParkingRepository parkingRepository,IMapper mapper)
+
+        public ParkingService(IParkingRepository parkingRepository,IMapper mapper,IParkingImageRepository parkingImageRepository )
         {
             _parkingRepository = parkingRepository;
             _mapper = mapper;
+            _parkingImageRepository = parkingImageRepository;
 
         }
+
 
         public async Task<List<ParkingLot>> GetParkingLotsAsync()
         {
@@ -157,6 +162,49 @@ namespace SpotParkAPI.Services
                 throw new ArgumentException("Availability type is required");
             }
         }
+
+        public async Task<List<ParkingLotDto>> GetParkingLotsByOwnerIdAsync(int ownerId)
+        {
+            var parkingLots = await _parkingRepository.GetParkingLotsByOwnerIdAsync(ownerId);
+            return _mapper.Map<List<ParkingLotDto>>(parkingLots);
+        }
+
+        public async Task<ParkingLotDto> GetParkingLotDetailsByIdAsync(int id)
+        {
+            var parkingLot = await _parkingRepository.GetParkingLotByIdAsync(id);
+            if (parkingLot == null)
+            {
+                throw new KeyNotFoundException($"Parking lot with ID {id} not found.");
+            }
+
+            var availabilitySchedules = await _parkingRepository.GetAvailabilitySchedulesByParkingLotIdAsync(id);
+            var images = await _parkingImageRepository.GetImagesForParkingLotAsync(id);
+
+            var dto = _mapper.Map<ParkingLotDto>(parkingLot);
+            dto.AvailabilitySchedules = _mapper.Map<List<AvailabilityScheduleDto>>(availabilitySchedules);
+
+            // Important! Inițializăm lista Images dacă nu există
+            dto.Images = new List<ParkingLotImageDto>();
+
+            foreach (var img in images)
+            {
+                dto.Images.Add(new ParkingLotImageDto
+                {
+                    ImageId = img.ImageId,
+                    UploadedAt = img.UploadedAt,
+                    ImageUrl = $"{GetBaseUrl()}/{img.ImagePath.Replace("\\", "/")}"
+                });
+            }
+
+            return dto;
+        }
+
+        private string GetBaseUrl()
+        {
+            return "https://localhost:5001"; // Adaptează la hostul tău final
+        }
+
+
 
     }
 }

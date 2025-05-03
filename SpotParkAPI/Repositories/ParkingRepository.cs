@@ -44,7 +44,13 @@ namespace SpotParkAPI.Repositories
                 .Where(a => a.ParkingLotId == parkingLotId)
                 .ToListAsync();
         }
+        public async Task<List<ParkingLot>> GetParkingLotsByOwnerIdAsync(int ownerId)
+        {
+            return await _context.ParkingLots
+                .Where(p => p.OwnerId == ownerId)
+                .ToListAsync();
+        }
 
-        
+
     }
 }

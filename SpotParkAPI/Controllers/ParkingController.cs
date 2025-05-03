@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SpotParkAPI.Models.Dtos;
 using SpotParkAPI.Models.Entities;
@@ -86,7 +87,23 @@ namespace SpotParkAPI.Controllers
             }
         }
 
-        
+        [HttpGet("my-spots")]
+        [Authorize]
+        public async Task<ActionResult<List<ParkingLotDto>>> GetMyParkingLots()
+        {
+            var userId = _commonService.GetCurrentUserId();
+            var mySpots = await _parkingService.GetParkingLotsByOwnerIdAsync(userId);
+            return Ok(mySpots);
+        }
+
+        [HttpGet("{id}/details")]
+        public async Task<ActionResult<ParkingLotDto>> GetParkingLotDetails(int id)
+        {
+            var parkingLotDetails = await _parkingService.GetParkingLotDetailsByIdAsync(id);
+            return Ok(parkingLotDetails);
+        }
+
+
 
 
     }

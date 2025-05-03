@@ -37,6 +37,8 @@ builder.Services.AddScoped<IReservationService, ReservationService>();
 builder.Services.AddScoped<ICommonService, CommonService>();
 builder.Services.AddScoped<IParkingImageRepository, ParkingImageRepository>();
 builder.Services.AddScoped<ParkingImageService>();
+builder.Services.AddScoped<IWalletRepository, WalletRepository>();
+
 builder.Services.AddHttpContextAccessor(); // Pentru IHttpContextAccessor
 
 
