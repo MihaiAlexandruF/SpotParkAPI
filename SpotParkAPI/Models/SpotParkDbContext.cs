@@ -100,6 +100,11 @@ public partial class SpotParkDbContext : DbContext
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnType("datetime")
                 .HasColumnName("updated_at");
+            entity.Property(e => e.IsActive)
+                .HasColumnName("is_active")
+                .HasDefaultValue(false);
+
+
 
             entity.HasOne(d => d.Owner).WithMany(p => p.ParkingLots)
                 .HasForeignKey(d => d.OwnerId)
@@ -272,6 +277,7 @@ public partial class SpotParkDbContext : DbContext
                   .HasForeignKey(e => e.UserId)
                   .OnDelete(DeleteBehavior.Cascade);
         });
+
 
 
         OnModelCreatingPartial(modelBuilder);

@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SpotParkAPI.Models;
 
@@ -11,9 +12,11 @@ using SpotParkAPI.Models;
 namespace SpotParkAPI.Migrations
 {
     [DbContext(typeof(SpotParkDbContext))]
-    partial class SpotParkDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250503161319_AddAvailableByScheduleToParkingLot")]
+    partial class AddAvailableByScheduleToParkingLot
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -81,6 +84,9 @@ namespace SpotParkAPI.Migrations
                         .HasColumnType("varchar(255)")
                         .HasColumnName("address");
 
+                    b.Property<bool>("AvailableBySchedule")
+                        .HasColumnType("bit");
+
                     b.Property<DateTime?>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime")
@@ -90,12 +96,6 @@ namespace SpotParkAPI.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("text")
                         .HasColumnName("description");
-
-                    b.Property<bool>("IsActive")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false)
-                        .HasColumnName("is_active");
 
                     b.Property<decimal>("Latitude")
                         .HasColumnType("decimal(10, 8)")
