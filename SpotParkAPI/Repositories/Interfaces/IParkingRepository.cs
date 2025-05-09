@@ -15,6 +15,9 @@ namespace SpotParkAPI.Repositories.Interfaces
         Task<List<AvailabilitySchedule>> GetAvailabilitySchedulesByParkingLotIdAsync(int parkingLotId);
 
         Task<List<ParkingLot>> GetParkingLotsByOwnerIdAsync(int ownerId);
-       
+        Task<List<ParkingLot>> GetFullParkingLotsByOwnerIdAsync(int ownerId);
+        Task<decimal> GetTotalEarningsForParkingLotAsync(int parkingLotId);
+        Task SetParkingLotActiveStatusAsync(int parkingLotId, bool isActive);
+
     }
 }

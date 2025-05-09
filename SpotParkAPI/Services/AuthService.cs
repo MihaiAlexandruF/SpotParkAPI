@@ -17,11 +17,13 @@ namespace SpotParkAPI.Services
     {
         private readonly SpotParkDbContext _context;
         private readonly IConfiguration _configuration;
+        private readonly IWalletService _walletService;
 
-        public AuthService(SpotParkDbContext context, IConfiguration configuration)
+        public AuthService(SpotParkDbContext context, IConfiguration configuration, IWalletService walletService)
         {
             _context = context;
             _configuration = configuration;
+            _walletService = walletService;
         }
 
         public async Task<LoginResponse> LoginAsync(LoginRequest request)
@@ -82,6 +84,36 @@ namespace SpotParkAPI.Services
 
             return true;
         }
+
+        public async Task<UserValidationDto> GetUserValidationDtoAsync(int userId)
+        {
+            var user = await _context.Users
+                .Include(u => u.UserVehicles)
+                .FirstOrDefaultAsync(u => u.UserId == userId);
+
+            if (user == null)
+            {
+                throw new Exception("User not found");
+            }
+
+            var wallet = await _walletService.GetOrCreateWalletAsync(userId);
+
+            return new UserValidationDto
+            {
+                UserId = user.UserId,
+                Username = user.Username,
+                Balance = wallet.Balance,
+                Vehicles = user.UserVehicles.Select(v => new UserVehicleDto
+                {
+                    Id = v.Id,
+                    PlateNumber = v.PlateNumber
+                }).ToList()
+            };
+        }
+
+
+
+
 
 
 

@@ -1,4 +1,6 @@
-﻿using SpotParkAPI.Models.Requests;
+﻿using SpotParkAPI.Models.Dtos;
+using SpotParkAPI.Models.Entities;
+using SpotParkAPI.Models.Requests;
 
 namespace SpotParkAPI.Services.Interfaces
 {
@@ -6,5 +8,8 @@ namespace SpotParkAPI.Services.Interfaces
     {  
         Task<LoginResponse> LoginAsync(LoginRequest request);
         Task<bool> RegisterAsync(RegisterRequest request);
+        Task<UserValidationDto> GetUserValidationDtoAsync(int userId);
+
+
     }
 }

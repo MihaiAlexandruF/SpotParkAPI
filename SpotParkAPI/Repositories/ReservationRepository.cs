@@ -46,6 +46,8 @@ namespace SpotParkAPI.Repositories
 
         public async Task<List<Reservation>> GetActiveReservationsForOwnerAsync(int ownerId, DateTime now)
         {
+            Console.WriteLine($"[ActiveReservations] Checking for owner {ownerId} at UTC {now}");
+
             return await _context.Reservations
                 .Include(r => r.ParkingLot)
                 .Include(r => r.Driver)

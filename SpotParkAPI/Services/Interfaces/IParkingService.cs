@@ -13,6 +13,8 @@ namespace SpotParkAPI.Services.Interfaces
         Task<List<AvailabilityScheduleDto>> GetAvailabilitySchedulesAsync(int parkingLotId);
         Task<List<ParkingLotDto>> GetParkingLotsByOwnerIdAsync(int ownerId);
         Task<ParkingLotDto> GetParkingLotDetailsByIdAsync(int id);
+        Task<List<ParkingLotForOwnerDto>> GetParkingLotsForOwnerDashboardAsync(int ownerId);
+        Task<bool> ToggleParkingLotActiveStatusAsync(int userId, int parkingLotId);
 
     }
 }

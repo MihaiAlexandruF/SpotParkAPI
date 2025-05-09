@@ -50,7 +50,30 @@ namespace SpotParkAPI.Repositories
                 .Where(p => p.OwnerId == ownerId)
                 .ToListAsync();
         }
+        public async Task<List<ParkingLot>> GetFullParkingLotsByOwnerIdAsync(int ownerId)
+        {
+            return await _context.ParkingLots
+                .Include(p => p.AvailabilitySchedules)
+                .Include(p => p.Images)
+                .Where(p => p.OwnerId == ownerId)
+                .ToListAsync();
+        }
 
+        public async Task<decimal> GetTotalEarningsForParkingLotAsync(int parkingLotId)
+        {
+            return await _context.Reservations
+                .Where(r => r.ParkingLotId == parkingLotId && r.Status == "completed")
+                .SumAsync(r => (decimal?)r.TotalCost) ?? 0;
+        }
+        public async Task SetParkingLotActiveStatusAsync(int parkingLotId, bool isActive)
+        {
+            var parkingLot = await _context.ParkingLots.FindAsync(parkingLotId);
+            if (parkingLot == null) return;
+
+            parkingLot.IsActive = isActive;
+            _context.ParkingLots.Update(parkingLot);
+            await _context.SaveChangesAsync();
+        }
 
     }
 }

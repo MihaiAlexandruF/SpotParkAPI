@@ -1,10 +1,11 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using SpotParkAPI.Models;
 using SpotParkAPI.Models.Entities;
-   
+using SpotParkAPI.Services.Interfaces;
+
 namespace SpotParkAPI.Services
 {
-    public class WalletService
+    public class WalletService:IWalletService
     {
         private readonly SpotParkDbContext _context;
 

@@ -22,6 +22,7 @@ namespace SpotParkAPI.Controllers
         public async Task<IActionResult> GetBalance()
         {
             var userId = _commonService.GetCurrentUserId();
+            Console.WriteLine($"USER ID: {userId}");
             var balance = await _walletService.GetBalanceAsync(userId);
             return Ok(new { balance, currency = "RON" });
         }

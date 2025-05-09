@@ -64,8 +64,10 @@ namespace SpotParkAPI.Services
                 Latitude = request.Latitude,
                 Longitude = request.Longitude,
                 CreatedAt = DateTime.Now,
-                UpdatedAt = DateTime.Now
+                UpdatedAt = DateTime.Now,
+                IsActive = true 
             };
+
 
             await _parkingRepository.AddParkingLotAsync(parkingLot);
 
@@ -204,6 +206,54 @@ namespace SpotParkAPI.Services
             return "https://localhost:5000"; // Adaptează la hostul tău final
         }
 
+        public async Task<List<ParkingLotForOwnerDto>> GetParkingLotsForOwnerDashboardAsync(int ownerId)
+        {
+            var parkingLots = await _parkingRepository.GetFullParkingLotsByOwnerIdAsync(ownerId);
+            var result = new List<ParkingLotForOwnerDto>();
+
+            foreach (var lot in parkingLots)
+            {
+                var earnings = await _parkingRepository.GetTotalEarningsForParkingLotAsync(lot.ParkingLotId);
+
+                var dto = new ParkingLotForOwnerDto
+                {
+                    ParkingLotId = lot.ParkingLotId,
+                    Address = lot.Address,
+                    Description = lot.Description,
+                    PricePerHour = lot.PricePerHour,
+                    Latitude = (double)lot.Latitude,
+                    Longitude = (double)lot.Longitude,
+                    IsActive = lot.IsActive,
+                    AvailabilitySchedules = _mapper.Map<List<AvailabilityScheduleDto>>(lot.AvailabilitySchedules),
+
+                    ImageUrls = lot.Images?.Select(img =>
+                        $"{GetBaseUrl()}/{img.ImagePath.Replace("\\", "/")}"
+                    ).ToList() ?? new List<string>(),
+
+                    Earnings = (double)earnings
+                };
+
+                result.Add(dto);
+            }
+
+            return result;
+        }
+
+        public async Task<bool> ToggleParkingLotActiveStatusAsync(int userId, int parkingLotId)
+        {
+            var parkingLot = await _parkingRepository.GetParkingLotByIdAsync(parkingLotId);
+            if (parkingLot == null)
+                throw new KeyNotFoundException("Locul de parcare nu există.");
+
+            if (parkingLot.OwnerId != userId)
+                throw new UnauthorizedAccessException("Nu ești proprietarul acestui loc de parcare.");
+
+            var newStatus = !parkingLot.IsActive;
+
+            await _parkingRepository.SetParkingLotActiveStatusAsync(parkingLotId, newStatus);
+
+            return newStatus;
+        }
 
 
     }

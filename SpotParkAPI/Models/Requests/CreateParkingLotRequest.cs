@@ -14,6 +14,7 @@ namespace SpotParkAPI.Models.Requests
         // For "daily" type
         public TimeSpan? DailyOpenTime { get; set; }
         public TimeSpan? DailyCloseTime { get; set; }
+
         // For "weekly" type
         public List<WeeklySchedule>? WeeklySchedules { get; set; }
     }

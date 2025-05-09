@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using SpotParkAPI.Models.Dtos;
 using SpotParkAPI.Models.Entities;
 using SpotParkAPI.Models.Requests;
+using SpotParkAPI.Repositories.Interfaces;
 using SpotParkAPI.Services;
 using SpotParkAPI.Services.Interfaces;
 using System;
@@ -18,13 +19,14 @@ namespace SpotParkAPI.Controllers
     public class ParkingController : ControllerBase
     {
         private readonly ParkingService _parkingService;
+        private readonly IParkingRepository _parkingRepository;
         private readonly ICommonService _commonService;
 
-        public ParkingController(ParkingService parkingService,ICommonService commonService)
+        public ParkingController(ParkingService parkingService,ICommonService commonService, IParkingRepository parkingRepository)
         {
             _parkingService = parkingService;
             _commonService = commonService;
-
+            _parkingRepository = parkingRepository;
         }
 
         [HttpGet]
@@ -89,12 +91,15 @@ namespace SpotParkAPI.Controllers
 
         [HttpGet("my-spots")]
         [Authorize]
-        public async Task<ActionResult<List<ParkingLotDto>>> GetMyParkingLots()
+        public async Task<ActionResult<List<ParkingLotForOwnerDto>>> GetMySpots()
         {
             var userId = _commonService.GetCurrentUserId();
-            var mySpots = await _parkingService.GetParkingLotsByOwnerIdAsync(userId);
-            return Ok(mySpots);
+
+            var parkingLots = await _parkingService.GetParkingLotsForOwnerDashboardAsync(userId);
+
+            return Ok(parkingLots);
         }
+
 
         [HttpGet("{id}/details")]
         public async Task<ActionResult<ParkingLotDto>> GetParkingLotDetails(int id)
@@ -103,6 +108,26 @@ namespace SpotParkAPI.Controllers
             return Ok(parkingLotDetails);
         }
 
+
+        [HttpPut("{parkingLotId}/toggle-active")]
+        [Authorize]
+        public async Task<IActionResult> ToggleActive(int parkingLotId)
+        {
+            var userId = _commonService.GetCurrentUserId();
+            try
+            {
+                var newStatus = await _parkingService.ToggleParkingLotActiveStatusAsync(userId, parkingLotId);
+                return Ok(new { ParkingLotId = parkingLotId, IsActive = newStatus });
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound("Locul de parcare nu există.");
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return Forbid("Nu ești proprietarul acestui loc de parcare.");
+            }
+        }
 
 
 

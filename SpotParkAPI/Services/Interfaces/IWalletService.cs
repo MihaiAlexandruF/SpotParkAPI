@@ -11,5 +11,15 @@ namespace SpotParkAPI.Services.Interfaces
 
         Task<List<WalletTransaction>> GetTransactionsAsync(int userId);
 
+        Task AddTransactionAsync(
+    int userId,
+    decimal amount,
+    WalletTransactionType type,
+    string direction,
+    string? description = null,
+    int? reservationId = null
+       );
+
+
     }
 }

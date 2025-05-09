@@ -17,13 +17,16 @@ namespace SpotParkAPI.Services
         private readonly IWalletRepository _walletRepository;
         private readonly IMapper _mapper;
         private readonly ICommonService _commonService;
+        private readonly IWalletService _walletService;
 
         public ReservationService(
+            IWalletService walletService,
             IWalletRepository walletRepository,
             IReservationRepository reservationRepository,
             IMapper mapper,
             ICommonService commonService)
         {
+            _walletService = walletService;
             _walletRepository = walletRepository;
             _reservationRepository = reservationRepository;
             _mapper = mapper;
@@ -54,26 +57,11 @@ namespace SpotParkAPI.Services
             if (plate == null)
                 throw new InvalidOperationException("Numărul de înmatriculare nu aparține acestui cont.");
 
-
-            // Comision 10%
-            var commission = totalPrice * 0.10m;
+            // Comision 25%
+            var commission = Math.Round(totalPrice * 0.25m, 2);
             var ownerRevenue = totalPrice - commission;
 
-            if (request.PaymentMethod == "wallet")
-            {
-                var driverWallet = await _walletRepository.GetByUserIdAsync(userId);
-                if (driverWallet == null || driverWallet.Balance < totalPrice)
-                    throw new InvalidOperationException("Fonduri insuficiente în portofelul electronic.");
-
-                driverWallet.Balance -= totalPrice;
-
-                var ownerWallet = await _walletRepository.GetByUserIdAsync(parkingLot.OwnerId);
-                if (ownerWallet == null)
-                    throw new InvalidOperationException("Proprietarul nu are portofel electronic disponibil.");
-
-                ownerWallet.Balance += ownerRevenue;
-            }
-
+            // Creează rezervarea
             var reservation = new Reservation
             {
                 DriverId = userId,
@@ -88,8 +76,32 @@ namespace SpotParkAPI.Services
 
             await _reservationRepository.AddReservationAsync(reservation);
 
+            if (request.PaymentMethod == "wallet")
+            {
+                // Debitare client
+                await _walletService.AddTransactionAsync(
+                    userId,
+                    totalPrice,
+                    WalletTransactionType.ReservationPayment,
+                    "out",
+                    $"Plată rezervare la {parkingLot.Address}",
+                    reservation.ReservationId
+                );
+
+                // Creditare proprietar
+                await _walletService.AddTransactionAsync(
+                    parkingLot.OwnerId,
+                    ownerRevenue,
+                    WalletTransactionType.Earning,
+                    "in",
+                    $"Venit rezervare la {parkingLot.Address}",
+                    reservation.ReservationId
+                );
+            }
+
             return _mapper.Map<ReservationDto>(reservation);
         }
+
 
 
         public async Task<bool> IsParkingLotAvailableAsync(int parkingLotId, DateTime startTime, DateTime endTime)
@@ -101,6 +113,8 @@ namespace SpotParkAPI.Services
         public async Task<List<ActiveClientDto>> GetActiveClientsAsync(int ownerId)
         {
             var now = DateTime.UtcNow;
+            Console.WriteLine($"[ActiveClients] NOW UTC: {now}");
+
 
             var reservations = await _reservationRepository.GetActiveReservationsForOwnerAsync(ownerId, now);
 

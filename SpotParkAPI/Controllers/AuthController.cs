@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SpotParkAPI.Models.Requests;
+using SpotParkAPI.Services;
 using SpotParkAPI.Services.Interfaces;
 using System.Security.Claims;
 
@@ -9,10 +10,12 @@ using System.Security.Claims;
 public class AuthController : ControllerBase
 {
     private readonly IAuthService _authService;
+    private readonly ICommonService _commonService;
 
-    public AuthController(IAuthService authService)
+    public AuthController(IAuthService authService,ICommonService commonService)
     {
         _authService = authService;
+        _commonService = commonService;
     }
 
     [HttpPost("login")]
@@ -36,20 +39,20 @@ public class AuthController : ControllerBase
             return Ok(new { Success = result });
           
     }
-
     [HttpGet("validate")]
-    [Authorize] 
-    public IActionResult Validate()
+    [Authorize]
+    public async Task<IActionResult> Validate()
     {
-        
-        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        var username = User.FindFirst(ClaimTypes.Name)?.Value;
+        var userId = _commonService.GetCurrentUserId();
 
-        return Ok(new
-        {
-            Valid = true,
-            UserId = userId,
-            Username = username
-        });
+
+        var userValidation = await _authService.GetUserValidationDtoAsync(userId);
+
+        return Ok(userValidation);
     }
+
+
+
+
+
 }
