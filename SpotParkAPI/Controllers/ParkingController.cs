@@ -6,6 +6,7 @@ using SpotParkAPI.Models.Entities;
 using SpotParkAPI.Models.Requests;
 using SpotParkAPI.Repositories.Interfaces;
 using SpotParkAPI.Services;
+using SpotParkAPI.Services.Helpers;
 using SpotParkAPI.Services.Interfaces;
 using System;
 using System.Collections.Generic;
@@ -21,12 +22,14 @@ namespace SpotParkAPI.Controllers
         private readonly ParkingService _parkingService;
         private readonly IParkingRepository _parkingRepository;
         private readonly ICommonService _commonService;
+        private readonly ParkingImageService _parkingImageService;
 
-        public ParkingController(ParkingService parkingService,ICommonService commonService, IParkingRepository parkingRepository)
+        public ParkingController(ParkingService parkingService,ICommonService commonService, IParkingRepository parkingRepository, ParkingImageService parkingImageService)
         {
             _parkingService = parkingService;
             _commonService = commonService;
             _parkingRepository = parkingRepository;
+            _parkingImageService = parkingImageService;
         }
 
         [HttpGet]
@@ -128,8 +131,47 @@ namespace SpotParkAPI.Controllers
                 return Forbid("Nu ești proprietarul acestui loc de parcare.");
             }
         }
+        [HttpGet("map-preview")]
+        [Authorize]
+        public async Task<ActionResult<List<ParkingLotMapPreviewDto>>> GetMapPreview([FromQuery] DateTime startTime, [FromQuery] DateTime endTime)
+        {
+            var userId = _commonService.GetCurrentUserId();
 
+            var utcStartTime = TimeZoneService.ConvertLocalToUtc(startTime);
+            var utcEndTime = TimeZoneService.ConvertLocalToUtc(endTime);
 
+            var previews = await _parkingService.GetAvailableMapPreviewsAsync(utcStartTime, utcEndTime);
+            return Ok(previews);
+        }
+
+        [HttpPost("create-complete")]
+        [Authorize]
+        public async Task<IActionResult> CreateCompleteParkingLot([FromForm] CompleteParkingLotRequest request)
+        {
+            var userId = _commonService.GetCurrentUserId();
+
+            var result = await _parkingService.CreateCompleteParkingLotAsync(request, userId);
+
+            return Ok(result);
+        }
+
+        [HttpPost("parking")]
+        public async Task<IActionResult> CreateParking([FromBody] CreateParkingLotRequest request)
+        {
+            var userId = _commonService.GetCurrentUserId();
+            var result = await _parkingService.CreateParkingLotWithAvailabilityAsync(request, userId);
+            return Ok(result);
+        }
+        
+        [HttpPost("parking/{parkingLotId}/images")]
+        public async Task<IActionResult> UploadImage(int parkingLotId, IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+                return BadRequest("Fișier invalid.");
+
+            var result = await _parkingImageService.UploadImageAsync(parkingLotId, file);
+            return Ok(result);
+        }
 
     }
 }

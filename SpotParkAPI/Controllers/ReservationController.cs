@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using SpotParkAPI.Models.Requests;
 using SpotParkAPI.Services;
+using SpotParkAPI.Services.Helpers;
 using SpotParkAPI.Services.Interfaces;
 using System;
 using System.Threading.Tasks;
@@ -55,20 +56,13 @@ namespace SpotParkAPI.Controllers
         [HttpGet("check-availability")]
         public async Task<IActionResult> CheckAvailability(int parkingLotId, DateTime startTime, DateTime endTime)
         {
-            try
-            {
-                var isAvailable = await _reservationService.IsParkingLotAvailableAsync(parkingLotId, startTime, endTime);
-                return Ok(new { IsAvailable = isAvailable });
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(ex.Message);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, "Internal server error");
-            }
+            var utcStartTime = TimeZoneService.ConvertLocalToUtc(startTime);
+            var utcEndTime = TimeZoneService.ConvertLocalToUtc(endTime);
+
+            var isAvailable = await _reservationService.IsParkingLotAvailableAsync(parkingLotId, utcStartTime, utcEndTime);
+            return Ok(new { IsAvailable = isAvailable });
         }
+
 
         [HttpGet("active-clients")]
         public async Task<IActionResult> GetActiveClients()

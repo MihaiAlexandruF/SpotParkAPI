@@ -9,6 +9,7 @@ using SpotParkAPI.Services;
 using SpotParkAPI.Services.Interfaces;
 using System.Text;
 using SpotParkAPI.Middleware;
+using Microsoft.Extensions.FileProviders;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -42,8 +43,18 @@ builder.Services.AddScoped<IWalletService, WalletService>();
 builder.Services.AddScoped<IWalletRepository, WalletRepository>();
 
 
+builder.Services.AddScoped<IParkingService, ParkingService>();
+builder.Services.AddScoped<ICommonService, CommonService>();
+builder.Services.AddScoped<IAvailabilityService, AvailabilityService>();
+builder.Services.AddScoped<ParkingImageService>();
+
+
 builder.Services.AddHttpContextAccessor(); // Pentru IHttpContextAccessor
 
+builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(options =>
+{
+    options.MultipartBodyLengthLimit = 50 * 1024 * 1024; // 50MB
+});
 
 
 
@@ -74,6 +85,7 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddAuthorization();
 
+builder.Services.AddHostedService<ReservationCleanupService>();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -89,6 +101,12 @@ if (app.Environment.IsDevelopment())
 
 app.UseCors("AllowMobile");
 app.UseStaticFiles();
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(
+        Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads")),
+    RequestPath = "/uploads"
+});
 app.UseMiddleware<ExceptionMiddleware>();
 
 //app.UseHttpsRedirection();

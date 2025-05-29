@@ -15,6 +15,9 @@ namespace SpotParkAPI.Services.Interfaces
         Task<ParkingLotDto> GetParkingLotDetailsByIdAsync(int id);
         Task<List<ParkingLotForOwnerDto>> GetParkingLotsForOwnerDashboardAsync(int ownerId);
         Task<bool> ToggleParkingLotActiveStatusAsync(int userId, int parkingLotId);
+        Task<List<ParkingLotMapPreviewDto>> GetParkingLotMapPreviewsAsync();
+
+        Task<List<ParkingLotMapPreviewDto>> GetAvailableMapPreviewsAsync(DateTime startTime, DateTime endTime);
 
     }
 }

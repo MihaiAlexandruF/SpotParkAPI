@@ -75,5 +75,26 @@ namespace SpotParkAPI.Repositories
             await _context.SaveChangesAsync();
         }
 
+        public async Task<List<ParkingLot>> GetActiveAvailableAndUnreservedParkingLotsAsync(DateTime startTime, DateTime endTime)
+        {
+            return await _context.ParkingLots
+                .Include(p => p.AvailabilitySchedules)
+                .Where(p => p.IsActive)
+                .Where(p => p.AvailabilitySchedules.Any(s =>
+                    s.DayOfWeek == startTime.DayOfWeek.ToString() &&
+                    s.OpenTime <= TimeOnly.FromDateTime(startTime) &&
+                    s.CloseTime >= TimeOnly.FromDateTime(endTime)
+                ))
+                .Where(p => !_context.Reservations.Any(r =>
+                    r.ParkingLotId == p.ParkingLotId &&
+                    r.Status == "active" &&
+                    (
+                        (r.StartTime <= endTime && r.EndTime >= startTime) ||
+                        (r.StartTime >= startTime && r.StartTime <= endTime)
+                    )
+                ))
+                .ToListAsync();
+        }
+
     }
 }

@@ -8,6 +8,7 @@ using SpotParkAPI.Models.Dtos;
 using SpotParkAPI.Repositories.Interfaces;
 using SpotParkAPI.Services.Interfaces;
 using SpotParkAPI.Repositories;
+using SpotParkAPI.Services.Helpers;
 
 namespace SpotParkAPI.Services
 {
@@ -16,15 +17,15 @@ namespace SpotParkAPI.Services
         private readonly IParkingRepository _parkingRepository;
         private readonly IMapper _mapper;
         private readonly IParkingImageRepository _parkingImageRepository;
+        private readonly ParkingImageService _parkingImageService;
 
 
-
-        public ParkingService(IParkingRepository parkingRepository,IMapper mapper,IParkingImageRepository parkingImageRepository )
+        public ParkingService(IParkingRepository parkingRepository,IMapper mapper,IParkingImageRepository parkingImageRepository,ParkingImageService parkingImageService )
         {
             _parkingRepository = parkingRepository;
             _mapper = mapper;
             _parkingImageRepository = parkingImageRepository;
-
+            _parkingImageService = parkingImageService;
         }
 
 
@@ -255,6 +256,64 @@ namespace SpotParkAPI.Services
             return newStatus;
         }
 
+        public async Task<List<ParkingLotMapPreviewDto>> GetParkingLotMapPreviewsAsync()
+        {
+            var parkingLots = await _parkingRepository.GetParkingLotsAsync();
+            return parkingLots.Select(lot => new ParkingLotMapPreviewDto
+            {
+                ParkingLotId = lot.ParkingLotId,
+                PricePerHour = lot.PricePerHour,
+                Latitude = (double)lot.Latitude,
+                Longitude = (double)lot.Longitude
+            }).ToList();
+        }
+
+        public async Task<List<ParkingLotMapPreviewDto>> GetAvailableMapPreviewsAsync(DateTime startTime, DateTime endTime)
+        {
+            // Convertim din local la UTC
+            var startUtc = TimeZoneService.ConvertLocalToUtc(startTime);
+            var endUtc = TimeZoneService.ConvertLocalToUtc(endTime);
+
+            var availableLots = await _parkingRepository.GetActiveAvailableAndUnreservedParkingLotsAsync(startUtc, endUtc);
+
+            return availableLots.Select(lot => new ParkingLotMapPreviewDto
+            {
+                ParkingLotId = lot.ParkingLotId,
+                PricePerHour = lot.PricePerHour,
+                Latitude = (double)lot.Latitude,
+                Longitude = (double)lot.Longitude
+            }).ToList();
+        }
+
+
+        public async Task<ParkingLotDto> CreateCompleteParkingLotAsync(CompleteParkingLotRequest request, int userId)
+        {
+            var coreDto = new CreateParkingLotRequest
+            {
+                Address = request.Address,
+                Description = request.Description,
+                Latitude = (decimal)request.Latitude,
+                Longitude =(decimal) request.Longitude,
+                PricePerHour =(decimal)request.PricePerHour,
+                AvailabilityType = request.AvailabilityType,
+                DailyOpenTime = request.DailyOpenTime,
+                DailyCloseTime = request.DailyCloseTime,
+                WeeklySchedules = request.WeeklySchedules
+            };
+
+            var parkingLot = await CreateParkingLotWithAvailabilityAsync(coreDto, userId);
+
+            if (request.Images != null)
+            {
+                foreach (var file in request.Images)
+                {
+                    await _parkingImageService.UploadImageAsync(parkingLot.ParkingLotId, file);
+                }
+            }
+
+
+            return parkingLot;
+        }
 
     }
 }

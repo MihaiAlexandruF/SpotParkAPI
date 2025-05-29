@@ -4,9 +4,11 @@ using SpotParkAPI.Models.Dtos;
 using SpotParkAPI.Models.Entities;
 using SpotParkAPI.Models.Requests;
 using SpotParkAPI.Repositories.Interfaces;
+using SpotParkAPI.Services.Helpers;
 using SpotParkAPI.Services.Interfaces;
 using System;
-using System.Globalization;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace SpotParkAPI.Services
@@ -38,36 +40,37 @@ namespace SpotParkAPI.Services
             var userId = _commonService.GetCurrentUserId();
             var parkingLot = await _commonService.GetParkingLotByIdAsync(request.ParkingLotId);
 
-            var isAvailableInSchedule = await _commonService.IsParkingLotAvailableAsync(request.ParkingLotId, request.StartTime, request.EndTime);
+            // Convertire date locale în UTC
+            var localStartTime = TimeZoneService.ConvertLocalToUtc(request.StartTime);
+            var localEndTime = TimeZoneService.ConvertLocalToUtc(request.EndTime);
+
+            var isAvailableInSchedule = await _commonService.IsParkingLotAvailableAsync(request.ParkingLotId, localStartTime, localEndTime);
             if (!isAvailableInSchedule)
                 throw new InvalidOperationException("Locul de parcare nu este disponibil în intervalul selectat.");
 
-            var isFreeOfReservations = await _reservationRepository.IsParkingLotAvailableAsync(request.ParkingLotId, request.StartTime, request.EndTime);
+            var isFreeOfReservations = await _reservationRepository.IsParkingLotAvailableAsync(request.ParkingLotId, localStartTime, localEndTime);
             if (!isFreeOfReservations)
                 throw new InvalidOperationException("Locul de parcare este deja rezervat în acest interval de timp.");
 
-            var durationHours = (request.EndTime - request.StartTime).TotalMinutes / 60.0;
+            var durationHours = (localEndTime - localStartTime).TotalMinutes / 60.0;
             if (durationHours <= 0)
                 throw new InvalidOperationException("Ora de sfârșit trebuie să fie după ora de început.");
 
             var totalPrice = (decimal)durationHours * parkingLot.PricePerHour;
 
-            // Verificăm că userul deține plăcuța
             var plate = await _commonService.GetUserPlateAsync(userId, request.PlateId);
             if (plate == null)
                 throw new InvalidOperationException("Numărul de înmatriculare nu aparține acestui cont.");
 
-            // Comision 25%
             var commission = Math.Round(totalPrice * 0.25m, 2);
             var ownerRevenue = totalPrice - commission;
 
-            // Creează rezervarea
             var reservation = new Reservation
             {
                 DriverId = userId,
                 ParkingLotId = request.ParkingLotId,
-                StartTime = request.StartTime,
-                EndTime = request.EndTime,
+                StartTime = localStartTime,
+                EndTime = localEndTime,
                 TotalCost = totalPrice,
                 Status = "active",
                 CreatedAt = DateTime.UtcNow,
@@ -78,54 +81,36 @@ namespace SpotParkAPI.Services
 
             if (request.PaymentMethod == "wallet")
             {
-                // Debitare client
-                await _walletService.AddTransactionAsync(
-                    userId,
-                    totalPrice,
-                    WalletTransactionType.ReservationPayment,
-                    "out",
-                    $"Plată rezervare la {parkingLot.Address}",
-                    reservation.ReservationId
-                );
-
-                // Creditare proprietar
-                await _walletService.AddTransactionAsync(
-                    parkingLot.OwnerId,
-                    ownerRevenue,
-                    WalletTransactionType.Earning,
-                    "in",
-                    $"Venit rezervare la {parkingLot.Address}",
-                    reservation.ReservationId
-                );
+                await _walletService.AddTransactionAsync(userId, totalPrice, WalletTransactionType.ReservationPayment, "out", $"Plată rezervare la {parkingLot.Address}", reservation.ReservationId);
+                await _walletService.AddTransactionAsync(parkingLot.OwnerId, ownerRevenue, WalletTransactionType.Earning, "in", $"Venit rezervare la {parkingLot.Address}", reservation.ReservationId);
             }
 
             return _mapper.Map<ReservationDto>(reservation);
         }
 
-
-
         public async Task<bool> IsParkingLotAvailableAsync(int parkingLotId, DateTime startTime, DateTime endTime)
         {
-            return await _commonService.IsParkingLotAvailableAsync(parkingLotId, startTime, endTime);
-        }
+            var localStartTime = TimeZoneService.ConvertLocalToUtc(startTime);
+            var localEndTime = TimeZoneService.ConvertLocalToUtc(endTime);
 
+            return await _commonService.IsParkingLotAvailableAsync(parkingLotId, localStartTime, localEndTime);
+        }
 
         public async Task<List<ActiveClientDto>> GetActiveClientsAsync(int ownerId)
         {
             var now = DateTime.UtcNow;
             Console.WriteLine($"[ActiveClients] NOW UTC: {now}");
 
-
             var reservations = await _reservationRepository.GetActiveReservationsForOwnerAsync(ownerId, now);
+            Console.WriteLine($"[ActiveClients] Found {reservations.Count} active reservations.");
 
             return reservations.Select(r => new ActiveClientDto
             {
-                LicensePlate = r.LicensePlate,
-                ParkingSpot = r.ParkingLot.Address,
-                StartTime = r.StartTime.ToString("HH:mm", CultureInfo.InvariantCulture),
+                LicensePlate = string.IsNullOrEmpty(r.LicensePlate) ? "Necunoscut" : r.LicensePlate,
+                ParkingSpot = r.ParkingLot?.Address ?? "Necunoscut",
+                StartTime = r.StartTime.ToLocalTime().ToString("HH:mm"),
                 Duration = Math.Ceiling((r.EndTime - r.StartTime).TotalHours).ToString("0") + "h"
             }).ToList();
         }
-
     }
 }
