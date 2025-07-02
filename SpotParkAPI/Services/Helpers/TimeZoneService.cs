@@ -16,7 +16,9 @@ namespace SpotParkAPI.Services.Helpers
 
         public static DateTime ConvertLocalToUtc(DateTime localDateTime)
         {
-            return TimeZoneInfo.ConvertTimeToUtc(localDateTime, RomaniaTimeZone);
+            var unspecified = DateTime.SpecifyKind(localDateTime, DateTimeKind.Unspecified);
+            return TimeZoneInfo.ConvertTimeToUtc(unspecified, RomaniaTimeZone);
+            
         }
 
         public static DateTime ConvertUtcToLocal(DateTime utcDateTime)

@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using SpotParkAPI.Models.Requests;
 using SpotParkAPI.Services;
+using SpotParkAPI.Services.Helpers;
 using SpotParkAPI.Services.Interfaces;
 using System.Security.Claims;
 
@@ -21,15 +22,14 @@ public class AuthController : ControllerBase
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
-
-        Console.WriteLine("Login request received: UsernameOrEmail = " + request.UsernameOrEmail);
         var result = await _authService.LoginAsync(request);
-
-        Console.WriteLine("Authentication successful for: " + request.UsernameOrEmail);
-        return Ok(result);
-       
-
+        if (!result.Success)
+        {
+            return BadRequest(new { message = result.ErrorMessage });
+        }
+        return Ok(result.Data);
     }
+
 
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] RegisterRequest request)

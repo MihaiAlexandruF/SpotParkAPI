@@ -2,6 +2,7 @@
 using System.Net;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
+using Microsoft.IdentityModel.Tokens;
 
 namespace SpotParkAPI.Middleware
 {
@@ -33,6 +34,9 @@ namespace SpotParkAPI.Middleware
             var statusCode = exception switch
             {
                 UnauthorizedAccessException => StatusCodes.Status401Unauthorized,
+                SecurityTokenExpiredException => StatusCodes.Status401Unauthorized,
+                SecurityTokenInvalidSignatureException => StatusCodes.Status401Unauthorized,
+                SecurityTokenException => StatusCodes.Status401Unauthorized,
                 KeyNotFoundException => StatusCodes.Status404NotFound,
                 InvalidOperationException => StatusCodes.Status400BadRequest,
                 ArgumentException => StatusCodes.Status400BadRequest,
@@ -41,13 +45,14 @@ namespace SpotParkAPI.Middleware
 
             context.Response.StatusCode = statusCode;
 
-            return context.Response.WriteAsync(new
+            return context.Response.WriteAsync(System.Text.Json.JsonSerializer.Serialize(new
             {
-                Success = false,
-                StatusCode = statusCode,
-                Message = exception.Message,
-                ErrorType = exception.GetType().Name
-            }.ToString());
+                success = false,
+                statusCode,
+                message = exception.Message,
+                errorType = exception.GetType().Name
+            }));
+
         }
     }
 }

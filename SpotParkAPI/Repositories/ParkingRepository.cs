@@ -2,6 +2,7 @@
 using SpotParkAPI.Models;
 using SpotParkAPI.Models.Entities;
 using SpotParkAPI.Repositories.Interfaces;
+using SpotParkAPI.Services.Helpers;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -75,26 +76,33 @@ namespace SpotParkAPI.Repositories
             await _context.SaveChangesAsync();
         }
 
-        public async Task<List<ParkingLot>> GetActiveAvailableAndUnreservedParkingLotsAsync(DateTime startTime, DateTime endTime)
+        public async Task<List<ParkingLot>> GetActiveAvailableAndUnreservedParkingLotsAsync(DateTime localNow, DateTime utcNow)
         {
+            var dayOfWeek = localNow.DayOfWeek.ToString();
+            var currentTime = TimeOnly.FromDateTime(localNow);
+
             return await _context.ParkingLots
                 .Include(p => p.AvailabilitySchedules)
                 .Where(p => p.IsActive)
-                .Where(p => p.AvailabilitySchedules.Any(s =>
-                    s.DayOfWeek == startTime.DayOfWeek.ToString() &&
-                    s.OpenTime <= TimeOnly.FromDateTime(startTime) &&
-                    s.CloseTime >= TimeOnly.FromDateTime(endTime)
-                ))
+                .Where(p =>
+                    // ✅ Dacă parcarea nu are program definit – considerăm deschisă
+                    p.AvailabilitySchedules == null || !p.AvailabilitySchedules.Any() ||
+                    p.AvailabilitySchedules.Any(s =>
+                        s.DayOfWeek == dayOfWeek &&
+                        s.OpenTime <= currentTime &&
+                        s.CloseTime >= currentTime
+                    )
+                )
                 .Where(p => !_context.Reservations.Any(r =>
                     r.ParkingLotId == p.ParkingLotId &&
                     r.Status == "active" &&
-                    (
-                        (r.StartTime <= endTime && r.EndTime >= startTime) ||
-                        (r.StartTime >= startTime && r.StartTime <= endTime)
-                    )
+                    r.StartTime <= utcNow &&
+                    r.EndTime >= utcNow
                 ))
                 .ToListAsync();
         }
+
+
 
     }
 }

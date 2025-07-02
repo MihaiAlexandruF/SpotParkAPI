@@ -54,8 +54,6 @@ namespace SpotParkAPI.Services
         public async Task<ParkingLotDto> CreateParkingLotWithAvailabilityAsync(CreateParkingLotRequest request, int ownerId)
         {
             ValidateParkingLotRequest(request);
-
-            // Create the parking lot
             var parkingLot = new ParkingLot
             {
                 OwnerId = ownerId,
@@ -68,18 +66,14 @@ namespace SpotParkAPI.Services
                 UpdatedAt = DateTime.Now,
                 IsActive = true 
             };
-
-
             await _parkingRepository.AddParkingLotAsync(parkingLot);
-
-            // Create availability schedules based on the type
             switch (request.AvailabilityType.ToLower())
             {
                 case "always":
-                    // Always available - no need to create schedules
+                    
                     break;
                 case "daily":
-                    // Same schedule every day
+                    
                     if (!request.DailyOpenTime.HasValue || !request.DailyCloseTime.HasValue)
                     {
                         throw new ArgumentException("Daily open and close times are required for daily availability");
@@ -99,7 +93,7 @@ namespace SpotParkAPI.Services
                     }
                     break;
                 case "weekly":
-                    // Different schedule for each day of the week
+                    
                     if (request.WeeklySchedules == null || request.WeeklySchedules.Count == 0)
                     {
                         throw new ArgumentException("Weekly schedules are required for weekly availability");
@@ -172,39 +166,32 @@ namespace SpotParkAPI.Services
             return _mapper.Map<List<ParkingLotDto>>(parkingLots);
         }
 
-        public async Task<ParkingLotDto> GetParkingLotDetailsByIdAsync(int id)
+        public async Task<ServiceResult<ParkingLotDto>> GetParkingLotDetailsByIdAsync(int id)
         {
             var parkingLot = await _parkingRepository.GetParkingLotByIdAsync(id);
             if (parkingLot == null)
-            {
-                throw new KeyNotFoundException($"Parking lot with ID {id} not found.");
-            }
-
-            var availabilitySchedules = await _parkingRepository.GetAvailabilitySchedulesByParkingLotIdAsync(id);
-            var images = await _parkingImageRepository.GetImagesForParkingLotAsync(id);
+                return ServiceResult<ParkingLotDto>.Fail("Parcarea nu a fost găsită.");
 
             var dto = _mapper.Map<ParkingLotDto>(parkingLot);
-            dto.AvailabilitySchedules = _mapper.Map<List<AvailabilityScheduleDto>>(availabilitySchedules);
 
-            // Important! Inițializăm lista Images dacă nu există
-            dto.Images = new List<ParkingLotImageDto>();
+            var schedules = await _parkingRepository.GetAvailabilitySchedulesByParkingLotIdAsync(id);
+            dto.AvailabilitySchedules = _mapper.Map<List<AvailabilityScheduleDto>>(schedules);
 
-            foreach (var img in images)
+            var images = await _parkingImageRepository.GetImagesForParkingLotAsync(id);
+            dto.Images = images.Select(img => new ParkingLotImageDto
             {
-                dto.Images.Add(new ParkingLotImageDto
-                {
-                    ImageId = img.ImageId,
-                    UploadedAt = img.UploadedAt,
-                    ImageUrl = $"{GetBaseUrl()}/{img.ImagePath.Replace("\\", "/")}"
-                });
-            }
+                ImageId = img.ImageId,
+                UploadedAt = img.UploadedAt,
+                ImageUrl = $"{GetBaseUrl()}/{img.ImagePath.Replace("\\", "/")}"
+            }).ToList();
 
-            return dto;
+            return ServiceResult<ParkingLotDto>.Ok(dto);
         }
+
 
         private string GetBaseUrl()
         {
-            return "https://localhost:5000"; // Adaptează la hostul tău final
+            return "http://192.168.0.126:5000"; 
         }
 
         public async Task<List<ParkingLotForOwnerDto>> GetParkingLotsForOwnerDashboardAsync(int ownerId)
@@ -268,13 +255,9 @@ namespace SpotParkAPI.Services
             }).ToList();
         }
 
-        public async Task<List<ParkingLotMapPreviewDto>> GetAvailableMapPreviewsAsync(DateTime startTime, DateTime endTime)
+        public async Task<List<ParkingLotMapPreviewDto>> GetAvailableMapPreviewsAsync(DateTime localNow, DateTime utcNow)
         {
-            // Convertim din local la UTC
-            var startUtc = TimeZoneService.ConvertLocalToUtc(startTime);
-            var endUtc = TimeZoneService.ConvertLocalToUtc(endTime);
-
-            var availableLots = await _parkingRepository.GetActiveAvailableAndUnreservedParkingLotsAsync(startUtc, endUtc);
+            var availableLots = await _parkingRepository.GetActiveAvailableAndUnreservedParkingLotsAsync(localNow, utcNow);
 
             return availableLots.Select(lot => new ParkingLotMapPreviewDto
             {
@@ -284,6 +267,8 @@ namespace SpotParkAPI.Services
                 Longitude = (double)lot.Longitude
             }).ToList();
         }
+
+
 
 
         public async Task<ParkingLotDto> CreateCompleteParkingLotAsync(CompleteParkingLotRequest request, int userId)
@@ -315,5 +300,9 @@ namespace SpotParkAPI.Services
             return parkingLot;
         }
 
+        Task<ParkingLotDto> IParkingService.GetParkingLotDetailsByIdAsync(int id)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

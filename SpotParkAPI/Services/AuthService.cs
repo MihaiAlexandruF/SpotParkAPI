@@ -9,6 +9,7 @@ using SpotParkAPI.Models.Entities;
 using SpotParkAPI.Models.Requests;
 using SpotParkAPI.Services.Interfaces;
 using SpotParkAPI.Models.Dtos;
+using SpotParkAPI.Services.Helpers;
 
 
 namespace SpotParkAPI.Services
@@ -26,13 +27,13 @@ namespace SpotParkAPI.Services
             _walletService = walletService;
         }
 
-        public async Task<LoginResponse> LoginAsync(LoginRequest request)
+        public async Task<ServiceResult<LoginResponse>> LoginAsync(LoginRequest request)
         {
-            var user= await _context.Users.FirstOrDefaultAsync(u => u.Username == request.UsernameOrEmail || u.Email == request.UsernameOrEmail);
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == request.UsernameOrEmail || u.Email == request.UsernameOrEmail);
 
             if (user == null || !BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
             {
-                throw new UnauthorizedAccessException("Invalid username/email or password");
+                return ServiceResult<LoginResponse>.Fail("Nume de utilizator sau parola incorecte");
             }
 
             var token = GenerateJwtToken(user);
@@ -40,17 +41,18 @@ namespace SpotParkAPI.Services
             var userDto = new UserDto
             {
                 Username = user.Username,
-                Email = user.Email,
+                Email = user.Email
             };
 
-            return new LoginResponse
+            var response = new LoginResponse
             {
                 Token = token,
                 User = userDto
-
             };
-            
+
+            return ServiceResult<LoginResponse>.Ok(response);
         }
+
 
 
 
@@ -139,5 +141,7 @@ namespace SpotParkAPI.Services
             return new JwtSecurityTokenHandler().WriteToken(token);
 
         }
+
+        
     }
 }

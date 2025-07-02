@@ -52,7 +52,7 @@ namespace SpotParkAPI.Controllers
         {
             try
             {
-                // Get the current user's ID from the JWT token
+                
                 var userId = _commonService.GetCurrentUserId();
                 if (userId <= 0)
                 {
@@ -68,7 +68,7 @@ namespace SpotParkAPI.Controllers
             }
             catch (Exception ex)
             {
-                // Log the exception here
+                
                 return StatusCode(500, "An error occurred while creating the parking lot");
             }
         }
@@ -105,11 +105,18 @@ namespace SpotParkAPI.Controllers
 
 
         [HttpGet("{id}/details")]
-        public async Task<ActionResult<ParkingLotDto>> GetParkingLotDetails(int id)
+        [Authorize]
+        public async Task<IActionResult> GetParkingLotDetails(int id)
         {
-            var parkingLotDetails = await _parkingService.GetParkingLotDetailsByIdAsync(id);
-            return Ok(parkingLotDetails);
+            var userId = _commonService.GetCurrentUserId();
+            var result = await _parkingService.GetParkingLotDetailsByIdAsync(id);
+
+            if (!result.Success)
+                return NotFound(new { message = result.ErrorMessage });
+
+            return Ok(result.Data);
         }
+
 
 
         [HttpPut("{parkingLotId}/toggle-active")]
@@ -133,16 +140,18 @@ namespace SpotParkAPI.Controllers
         }
         [HttpGet("map-preview")]
         [Authorize]
-        public async Task<ActionResult<List<ParkingLotMapPreviewDto>>> GetMapPreview([FromQuery] DateTime startTime, [FromQuery] DateTime endTime)
+        public async Task<ActionResult<List<ParkingLotMapPreviewDto>>> GetMapPreview()
         {
-            var userId = _commonService.GetCurrentUserId();
+            var localNow = DateTime.Now;
+            var utcNow = TimeZoneService.ConvertLocalToUtc(localNow);
 
-            var utcStartTime = TimeZoneService.ConvertLocalToUtc(startTime);
-            var utcEndTime = TimeZoneService.ConvertLocalToUtc(endTime);
 
-            var previews = await _parkingService.GetAvailableMapPreviewsAsync(utcStartTime, utcEndTime);
-            return Ok(previews);
+            var result = await _parkingService.GetAvailableMapPreviewsAsync(localNow, utcNow);
+            return Ok(result);
         }
+
+
+
 
         [HttpPost("create-complete")]
         [Authorize]

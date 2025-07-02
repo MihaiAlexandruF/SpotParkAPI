@@ -73,6 +73,23 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidAudience = builder.Configuration["Jwt:Audience"],
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
         };
+        options.Events = new JwtBearerEvents
+        {
+            OnChallenge = context =>
+            {
+                context.HandleResponse(); // oprește comportamentul implicit
+                context.Response.StatusCode = 401;
+                context.Response.ContentType = "application/json";
+                var result = System.Text.Json.JsonSerializer.Serialize(new
+                {
+                    success = false,
+                    statusCode = 401,
+                    message = "Token invalid sau expirat",
+                    errorType = "AuthenticationError"
+                });
+                return context.Response.WriteAsync(result);
+            }
+        };
     });
 
 builder.Services.AddCors(options =>

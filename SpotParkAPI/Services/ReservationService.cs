@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Microsoft.EntityFrameworkCore;
+using SpotParkAPI.Models;
 using SpotParkAPI.Models.Dtos;
 using SpotParkAPI.Models.Entities;
 using SpotParkAPI.Models.Requests;
@@ -15,6 +16,7 @@ namespace SpotParkAPI.Services
 {
     public class ReservationService : IReservationService
     {
+        private readonly SpotParkDbContext _context;
         private readonly IReservationRepository _reservationRepository;
         private readonly IWalletRepository _walletRepository;
         private readonly IMapper _mapper;
@@ -22,12 +24,14 @@ namespace SpotParkAPI.Services
         private readonly IWalletService _walletService;
 
         public ReservationService(
+            SpotParkDbContext context,
             IWalletService walletService,
             IWalletRepository walletRepository,
             IReservationRepository reservationRepository,
             IMapper mapper,
             ICommonService commonService)
         {
+            _context = context;
             _walletService = walletService;
             _walletRepository = walletRepository;
             _reservationRepository = reservationRepository;
@@ -35,32 +39,40 @@ namespace SpotParkAPI.Services
             _commonService = commonService;
         }
 
-        public async Task<ReservationDto> ReserveParkingLotAsync(CreateReservationRequest request)
+        public async Task<ServiceResult<ReservationDto>> ReserveParkingLotAsync(CreateReservationRequest request)
         {
             var userId = _commonService.GetCurrentUserId();
             var parkingLot = await _commonService.GetParkingLotByIdAsync(request.ParkingLotId);
+            if (parkingLot == null)
+                return ServiceResult<ReservationDto>.Fail("Locul de parcare nu a fost găsit.");
 
-            // Convertire date locale în UTC
             var localStartTime = TimeZoneService.ConvertLocalToUtc(request.StartTime);
             var localEndTime = TimeZoneService.ConvertLocalToUtc(request.EndTime);
 
+            if (localEndTime <= localStartTime)
+                return ServiceResult<ReservationDto>.Fail("Ora de sfârșit trebuie să fie după ora de început.");
+
             var isAvailableInSchedule = await _commonService.IsParkingLotAvailableAsync(request.ParkingLotId, localStartTime, localEndTime);
             if (!isAvailableInSchedule)
-                throw new InvalidOperationException("Locul de parcare nu este disponibil în intervalul selectat.");
+                return ServiceResult<ReservationDto>.Fail("Locul de parcare nu este disponibil în intervalul selectat.");
 
             var isFreeOfReservations = await _reservationRepository.IsParkingLotAvailableAsync(request.ParkingLotId, localStartTime, localEndTime);
             if (!isFreeOfReservations)
-                throw new InvalidOperationException("Locul de parcare este deja rezervat în acest interval de timp.");
+                return ServiceResult<ReservationDto>.Fail("Locul de parcare este deja rezervat în acest interval de timp.");
 
             var durationHours = (localEndTime - localStartTime).TotalMinutes / 60.0;
-            if (durationHours <= 0)
-                throw new InvalidOperationException("Ora de sfârșit trebuie să fie după ora de început.");
-
             var totalPrice = (decimal)durationHours * parkingLot.PricePerHour;
 
             var plate = await _commonService.GetUserPlateAsync(userId, request.PlateId);
             if (plate == null)
-                throw new InvalidOperationException("Numărul de înmatriculare nu aparține acestui cont.");
+                return ServiceResult<ReservationDto>.Fail("Numărul de înmatriculare nu aparține acestui cont.");
+
+            if (request.PaymentMethod == "wallet")
+            {
+                var balance = await _walletService.GetBalanceAsync(userId);
+                if (balance < totalPrice)
+                    return ServiceResult<ReservationDto>.Fail("Fonduri insuficiente în portofel pentru această rezervare.");
+            }
 
             var commission = Math.Round(totalPrice * 0.25m, 2);
             var ownerRevenue = totalPrice - commission;
@@ -77,16 +89,39 @@ namespace SpotParkAPI.Services
                 LicensePlate = plate.PlateNumber
             };
 
-            await _reservationRepository.AddReservationAsync(reservation);
-
-            if (request.PaymentMethod == "wallet")
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
             {
-                await _walletService.AddTransactionAsync(userId, totalPrice, WalletTransactionType.ReservationPayment, "out", $"Plată rezervare la {parkingLot.Address}", reservation.ReservationId);
-                await _walletService.AddTransactionAsync(parkingLot.OwnerId, ownerRevenue, WalletTransactionType.Earning, "in", $"Venit rezervare la {parkingLot.Address}", reservation.ReservationId);
+                await _reservationRepository.AddReservationAsync(reservation);
+
+                if (request.PaymentMethod == "wallet")
+                {
+                    var debit = await _walletService.AddTransactionAsync(userId, totalPrice, WalletTransactionType.ReservationPayment, "out", $"Plată rezervare la {parkingLot.Address}", reservation.ReservationId);
+                    if (!debit.Success)
+                    {
+                        await transaction.RollbackAsync();
+                        return ServiceResult<ReservationDto>.Fail(debit.ErrorMessage!);
+                    }
+
+                    var credit = await _walletService.AddTransactionAsync(parkingLot.OwnerId, ownerRevenue, WalletTransactionType.Earning, "in", $"Venit rezervare la {parkingLot.Address}", reservation.ReservationId);
+                    if (!credit.Success)
+                    {
+                        await transaction.RollbackAsync();
+                        return ServiceResult<ReservationDto>.Fail(credit.ErrorMessage!);
+                    }
+                }
+
+                await transaction.CommitAsync();
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                return ServiceResult<ReservationDto>.Fail("Eroare internă la procesarea rezervării: " + ex.Message);
             }
 
-            return _mapper.Map<ReservationDto>(reservation);
+            return ServiceResult<ReservationDto>.Ok(_mapper.Map<ReservationDto>(reservation));
         }
+
 
         public async Task<bool> IsParkingLotAvailableAsync(int parkingLotId, DateTime startTime, DateTime endTime)
         {
@@ -99,10 +134,7 @@ namespace SpotParkAPI.Services
         public async Task<List<ActiveClientDto>> GetActiveClientsAsync(int ownerId)
         {
             var now = DateTime.UtcNow;
-            Console.WriteLine($"[ActiveClients] NOW UTC: {now}");
-
             var reservations = await _reservationRepository.GetActiveReservationsForOwnerAsync(ownerId, now);
-            Console.WriteLine($"[ActiveClients] Found {reservations.Count} active reservations.");
 
             return reservations.Select(r => new ActiveClientDto
             {

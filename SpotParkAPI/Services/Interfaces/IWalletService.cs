@@ -1,4 +1,5 @@
 ﻿using SpotParkAPI.Models.Entities;
+using SpotParkAPI.Services.Helpers;
 using System.Threading.Tasks;
 
 namespace SpotParkAPI.Services.Interfaces
@@ -11,14 +12,15 @@ namespace SpotParkAPI.Services.Interfaces
 
         Task<List<WalletTransaction>> GetTransactionsAsync(int userId);
 
-        Task AddTransactionAsync(
+        Task<ServiceResult<bool>> AddTransactionAsync(
     int userId,
     decimal amount,
     WalletTransactionType type,
     string direction,
     string? description = null,
     int? reservationId = null
-       );
+);
+
 
 
     }

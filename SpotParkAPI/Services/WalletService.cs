@@ -1,11 +1,12 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using SpotParkAPI.Models;
 using SpotParkAPI.Models.Entities;
+using SpotParkAPI.Services.Helpers;
 using SpotParkAPI.Services.Interfaces;
 
 namespace SpotParkAPI.Services
 {
-    public class WalletService:IWalletService
+    public class WalletService : IWalletService
     {
         private readonly SpotParkDbContext _context;
 
@@ -16,7 +17,8 @@ namespace SpotParkAPI.Services
 
         public async Task<Wallet> GetOrCreateWalletAsync(int userId)
         {
-            var wallet = await _context.Wallets.Include(w => w.Transactions)
+            var wallet = await _context.Wallets
+                .Include(w => w.Transactions)
                 .FirstOrDefaultAsync(w => w.UserId == userId);
 
             if (wallet == null)
@@ -51,9 +53,15 @@ namespace SpotParkAPI.Services
                 .ToListAsync();
         }
 
-        public async Task AddTransactionAsync(int userId, decimal amount, WalletTransactionType type, string direction, string? description = null, int? reservationId = null)
+        public async Task<ServiceResult<bool>> AddTransactionAsync(int userId, decimal amount, WalletTransactionType type, string direction, string? description = null, int? reservationId = null)
         {
             var wallet = await GetOrCreateWalletAsync(userId);
+
+            if (amount < 0)
+                return ServiceResult<bool>.Fail("Suma trebuie să fie pozitivă.");
+
+            if (direction == "out" && wallet.Balance < amount)
+                return ServiceResult<bool>.Fail("Fonduri insuficiente pentru această tranzacție.");
 
             var transaction = new WalletTransaction
             {
@@ -66,21 +74,16 @@ namespace SpotParkAPI.Services
                 CreatedAt = DateTime.UtcNow
             };
 
-            if (direction == "in")
-            {
-                wallet.Balance += amount;
-            }
-            else if (direction == "out")
-            {
-                wallet.Balance -= amount;
-            }
-
+            wallet.Balance += direction == "in" ? amount : -amount;
             wallet.UpdatedAt = DateTime.UtcNow;
 
             _context.WalletTransactions.Add(transaction);
             _context.Wallets.Update(wallet);
-
             await _context.SaveChangesAsync();
+
+            return ServiceResult<bool>.Ok(true);
         }
+
+        
     }
 }

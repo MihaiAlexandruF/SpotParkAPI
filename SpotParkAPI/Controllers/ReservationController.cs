@@ -24,33 +24,14 @@ namespace SpotParkAPI.Controllers
         [HttpPost("reserve")]
         public async Task<IActionResult> ReserveParkingLot([FromBody] CreateReservationRequest request)
         {
-            if (request.StartTime >= request.EndTime)
-            {
-                return BadRequest("Data de sfârșit trebuie să fie după data de început.");
-            }
+            var result = await _reservationService.ReserveParkingLotAsync(request);
 
-            try
-            {
-                var reservationDto = await _reservationService.ReserveParkingLotAsync(request);
-                return Ok(reservationDto);
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                return Unauthorized(ex.Message);
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(ex.Message);
-            }
-            catch (InvalidOperationException ex)
-            {
-                return BadRequest(ex.Message);
-            }
-            catch (Exception)
-            {
-                return StatusCode(500, "A apărut o eroare internă.");
-            }
+            if (!result.Success)
+                return BadRequest(new { message = result.ErrorMessage });
+
+            return Ok(result.Data);
         }
+
 
 
         [HttpGet("check-availability")]
