@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SpotParkAPI.Models;
 using SpotParkAPI.Models.Entities;
+using SpotParkAPI.Models.Requests;
 using SpotParkAPI.Services.Interfaces;
 using System.Threading.Tasks;
 
@@ -36,7 +37,7 @@ namespace SpotParkAPI.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> AddVehicle([FromBody] UserVehicle request)
+        public async Task<IActionResult> AddVehicle([FromBody] AddVehicleRequest request)
         {
             var userId = _commonService.GetCurrentUserId();
 
@@ -55,6 +56,7 @@ namespace SpotParkAPI.Controllers
 
             return Ok(vehicle);
         }
+
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteVehicle(int id)

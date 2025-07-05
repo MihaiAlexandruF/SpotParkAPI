@@ -14,5 +14,9 @@ namespace SpotParkAPI.Services.Interfaces
 
         Task<List<ActiveClientDto>> GetActiveClientsAsync(int ownerId);
 
+        Task<List<UserReservationDto>> GetActiveReservationsAsync();
+        Task<List<UserReservationDto>> GetPastReservationsAsync();
+
+
     }
 }

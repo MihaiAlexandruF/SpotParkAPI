@@ -15,6 +15,8 @@ public partial class User
 
     public string? Phone { get; set; }
 
+    public string Role { get; set; } = "User";
+
     public DateTime? CreatedAt { get; set; }
 
     public virtual ICollection<ParkingLot> ParkingLots { get; set; } = new List<ParkingLot>();

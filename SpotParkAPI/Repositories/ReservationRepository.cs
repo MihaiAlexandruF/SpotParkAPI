@@ -58,5 +58,21 @@ namespace SpotParkAPI.Repositories
                 .ToListAsync();
         }
 
+        public async Task<List<Reservation>> GetUserReservationsAsync(int userId, bool onlyActive)
+        {
+            var now = DateTime.UtcNow;
+
+            return await _context.Reservations
+                .Include(r => r.ParkingLot)
+                .Where(r => r.DriverId == userId &&
+                            (onlyActive ? r.EndTime > now : r.EndTime <= now))
+                .OrderByDescending(r => r.StartTime)
+                .ToListAsync();
+        }
+
+        public Task<List<Reservation>> GetReservationsByStatusAsync(int userId, bool onlyActive)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

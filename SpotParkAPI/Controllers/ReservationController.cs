@@ -53,5 +53,20 @@ namespace SpotParkAPI.Controllers
             return Ok(clients);
         }
 
+        [HttpGet("my-reservations/active")]
+        public async Task<IActionResult> GetMyActiveReservations()
+        {
+            var result = await _reservationService.GetActiveReservationsAsync();
+            return Ok(result);
+        }
+
+        [HttpGet("my-reservations/history")]
+        public async Task<IActionResult> GetMyPastReservations()
+        {
+            var result = await _reservationService.GetPastReservationsAsync();
+            return Ok(result);
+        }
+
+
     }
 }

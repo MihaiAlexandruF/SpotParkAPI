@@ -10,6 +10,7 @@ using SpotParkAPI.Models.Requests;
 using SpotParkAPI.Services.Interfaces;
 using SpotParkAPI.Models.Dtos;
 using SpotParkAPI.Services.Helpers;
+using System.Data;
 
 
 namespace SpotParkAPI.Services
@@ -69,7 +70,8 @@ namespace SpotParkAPI.Services
                 Username = request.Username,
                 Email = request.Email,
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow,
+                Role = "User"
             };
 
             _context.Users.Add(user);
@@ -126,10 +128,13 @@ namespace SpotParkAPI.Services
             Console.WriteLine($"Generating token for UserId: {user.UserId}");
             var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
             var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
+            var role = string.IsNullOrWhiteSpace(user.Role) ? "User" : user.Role;
             var claims = new[]
             {
-               new Claim(ClaimTypes.NameIdentifier,user.UserId.ToString()),
-               new Claim(ClaimTypes.Name,user.Username),
+               new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()),
+               new Claim(ClaimTypes.Name, user.Username ?? ""),
+               new Claim(ClaimTypes.Email, user.Email),
+               new Claim(ClaimTypes.Role, role) 
             };
             var token = new JwtSecurityToken(
                issuer: _configuration["Jwt:Issuer"],

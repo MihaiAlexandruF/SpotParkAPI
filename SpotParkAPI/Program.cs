@@ -10,6 +10,7 @@ using SpotParkAPI.Services.Interfaces;
 using System.Text;
 using SpotParkAPI.Middleware;
 using Microsoft.Extensions.FileProviders;
+using System.Security.Claims;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -71,7 +72,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateIssuerSigningKey = true,
             ValidIssuer = builder.Configuration["Jwt:Issuer"],
             ValidAudience = builder.Configuration["Jwt:Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"])),
+            RoleClaimType = ClaimTypes.Role
         };
         options.Events = new JwtBearerEvents
         {

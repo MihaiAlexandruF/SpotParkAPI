@@ -10,6 +10,9 @@ namespace SpotParkAPI.Repositories.Interfaces
         Task AddReservationAsync(Reservation reservation);
         Task<bool> IsParkingLotAvailableAsync(int parkingLotId, DateTime startTime, DateTime endTime);
         Task<List<Reservation>> GetActiveReservationsForOwnerAsync(int ownerId, DateTime now);
+        Task<List<Reservation>> GetUserReservationsAsync(int userId, bool onlyActive);
+
+
 
     }
 }
