@@ -18,17 +18,20 @@ SpotPark is a smart digital platform that connects drivers with available privat
 ---
 
 ## 📁 Project Structure
+
+```text
 SpotParkAPI/
 │
-├── Controllers/ → RESTful API endpoints
-├── Services/ → Business logic (interfaces + implementations)
-├── Repositories/ → Data access layer
-├── Models/ → Entities, DTOs, Requests, Enums
-├── Helpers/ → Utility services (TimeZoneService, etc.)
-├── Middlewares/ → JWT handling, global errors
-├── Migrations/ → Entity Framework DB schema
-├── wwwroot/ → Uploaded images (parking photos)
+├── Controllers/           → RESTful API endpoints
+├── Services/              → Business logic (interfaces + implementations)
+├── Repositories/          → Data access layer
+├── Models/                → Entities, DTOs, Requests, Enums
+├── Helpers/               → Utility services (TimeZoneService, etc.)
+├── Middlewares/           → JWT handling, global errors
+├── Migrations/            → Entity Framework DB schema
+├── wwwroot/               → Uploaded images (parking photos)
 └── Program.cs / Startup.cs → Entry point & configuration
+
 
 ---
 
